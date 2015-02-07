@@ -1,0 +1,11 @@
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\LeBlanc.exe.config
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\LeBlanc.exe
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\LeBlanc.pdb
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\LeagueSharp.Common.dll
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\LeagueSharp.dll
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\SharpDX.dll
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\SharpDX.Direct3D9.dll
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\clipper_library.dll
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\bin\x86\Debug\LeagueSharp.xml
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\obj\x86\Debug\LeBlanc.exe
+c:\users\carli\documents\visual studio 2013\Projects\LeBlanc\LeBlanc\obj\x86\Debug\LeBlanc.pdb

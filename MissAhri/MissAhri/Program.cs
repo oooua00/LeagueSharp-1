@@ -122,13 +122,14 @@ namespace MissAhri
             //Misc
             var miscMenu = new Menu("Misc", "Misc");
             {
-                miscMenu.AddSubMenu(new Menu("misc.Flee", "Flee"));
+                /*miscMenu.AddSubMenu(new Menu("Flee", "misc.Flee"));
                 miscMenu.SubMenu("misc.Flee").AddItem(new MenuItem("misc.Flee.Key", "Flee").SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press)));
+                */
 
-                miscMenu.AddSubMenu(new Menu("misc.Interrupt", "Interrupter"));
+                miscMenu.AddSubMenu(new Menu("Interrupter", "misc.Interrupt"));
                 miscMenu.SubMenu("misc.Interrupt").AddItem(new MenuItem("misc.Interrupt.E", "Use E").SetValue(true));
 
-                miscMenu.AddSubMenu(new Menu("misc.Anitgapcloser", "AntiGapcloser"));
+                miscMenu.AddSubMenu(new Menu("AntiGapcloser", "misc.Anitgapcloser"));
                 miscMenu.SubMenu("misc.Anitgapcloser").AddItem(new MenuItem("misc.Anitgapcloser.E", "Use E").SetValue(true));
 
                 AhriConfig.AddSubMenu(miscMenu);
@@ -137,11 +138,12 @@ namespace MissAhri
             //Drawing
             var drawMenu = new Menu("Drawing", "Drawing");
             {
-                drawMenu.AddSubMenu(new Menu("draw.Damage", "Damage Indicator"));
+                /*drawMenu.AddSubMenu(new Menu("Damage Indicator", "draw.Damage"));
                 drawMenu.SubMenu("draw.Damage").AddItem(new MenuItem("draw.Damage.Bool", "Draw Combo Damage")).SetValue(true);
                 drawMenu.SubMenu("draw.Damage").AddItem(new MenuItem("draw.Damage.Color", "Draw Combo Damage Color")).SetValue(new Circle(true, Color.FromArgb(90, 0, 191, 255)));
+                */
 
-                drawMenu.AddSubMenu(new Menu("draw.Spells", "Spells"));
+                drawMenu.AddSubMenu(new Menu("Spells", "draw.Spells"));
                 drawMenu.SubMenu("draw.Spells").AddItem(new MenuItem("draw.Spells.Q", "Draw Q").SetValue(new Circle(true, Color.AntiqueWhite)));
                 drawMenu.SubMenu("draw.Spells").AddItem(new MenuItem("draw.Spells.W", "Draw W").SetValue(new Circle(true, Color.AntiqueWhite)));
                 drawMenu.SubMenu("draw.Spells").AddItem(new MenuItem("draw.Spells.E", "Draw E").SetValue(new Circle(true, Color.AntiqueWhite)));
@@ -262,17 +264,17 @@ namespace MissAhri
                 return;
 
             var drawQ = AhriConfig.Item("draw.Spells.Q").GetValue<Circle>();
-            if (drawQ.Active)
+            if (drawQ.Active && Q.Level > 0)
             {
                 Render.Circle.DrawCircle(Player.Position, Q.Range, Q.IsReady() ? drawQ.Color : Color.DarkRed);
             }
             var drawW = AhriConfig.Item("draw.Spells.W").GetValue<Circle>();
-            if (drawW.Active)
+            if (drawW.Active && W.Level > 0)
             {
                 Render.Circle.DrawCircle(Player.Position, W.Range, W.IsReady() ? drawW.Color : Color.DarkRed);
             }
             var drawE = AhriConfig.Item("draw.Spells.E").GetValue<Circle>();
-            if (drawE.Active)
+            if (drawE.Active && E.Level > 0)
             {
                 Render.Circle.DrawCircle(Player.Position, E.Range, E.IsReady() ? drawE.Color : Color.DarkRed);
             }

@@ -1,0 +1,12 @@
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\MissAhri.exe.config
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\MissAhri.exe
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\MissAhri.pdb
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\LeagueSharp.Common.dll
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\LeagueSharp.dll
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\SharpDX.dll
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\SharpDX.Direct3D9.dll
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\clipper_library.dll
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\bin\x86\Debug\LeagueSharp.xml
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\obj\x86\Debug\MissAhri.csprojResolveAssemblyReference.cache
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\obj\x86\Debug\MissAhri.exe
+c:\users\carli\documents\visual studio 2013\Projects\MissAhri\MissAhri\obj\x86\Debug\MissAhri.pdb

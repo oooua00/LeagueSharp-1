@@ -1,11 +1,11 @@
 ﻿using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace LeBlanc
+namespace LeBlanc_2
 {
-    internal class Loader
+    internal class Program
     {
-        private static void Main(string[] args)
+        static void Main(string[] args)
         {
             if (args != null)
             {
@@ -14,9 +14,9 @@ namespace LeBlanc
                     if (ObjectManager.Player.ChampionName != "Leblanc")
                         return;
 
+                    Drawings.Init();
                     Configs.Init();
                     Spells.Init();
-                    Drawings.Init();
                     Objects.Init();
                     LeBlanc.Init();
 

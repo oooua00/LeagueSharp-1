@@ -2,7 +2,7 @@
 using LeagueSharp.Common;
 using Color = System.Drawing.Color;
 
-namespace LeBlanc
+namespace LeBlanc_2
 {
     internal class Configs
     {
@@ -48,20 +48,6 @@ namespace LeBlanc
             LeBlancConfig.SubMenu("harass").AddItem(new MenuItem("HarassManaPercent", "Minimum Mana Percent").SetValue(new Slider(30)));
             LeBlancConfig.SubMenu("harass").AddItem(new MenuItem("haraKey", "Harass Toggle").SetValue(new KeyBind('Y', KeyBindType.Toggle)));
 
-            LeBlancConfig.AddSubMenu(new Menu("Items", "items"));
-            LeBlancConfig.SubMenu("items").AddItem(new MenuItem("useIgnite", "Use Ignite").SetValue(true));
-            LeBlancConfig.SubMenu("items").AddItem(new MenuItem("useDfg", "Use DFG").SetValue(true));
-            LeBlancConfig.SubMenu("items").AddItem(new MenuItem("useZho", "Use Zhonyas").SetValue(true));
-            LeBlancConfig.SubMenu("items").AddItem(new MenuItem("minZho", "Zhonyas Min Health%").SetValue(new Slider(5)));
-            LeBlancConfig.SubMenu("items").AddSubMenu(new Menu("Health Potions", "hp"));
-            LeBlancConfig.SubMenu("items").SubMenu("hp").AddItem(new MenuItem("useHp", "Use Health Potion").SetValue(true));
-            LeBlancConfig.SubMenu("items").SubMenu("hp").AddItem(new MenuItem("useFlask", "Use Flask").SetValue(true));
-            LeBlancConfig.SubMenu("items").SubMenu("hp").AddItem(new MenuItem("minHp", "Minimum Health%").SetValue(new Slider(30)));
-            LeBlancConfig.SubMenu("items").AddSubMenu(new Menu("Mana Potions", "mp"));
-            LeBlancConfig.SubMenu("items").SubMenu("mp").AddItem(new MenuItem("useMp", "Use Mana Potion").SetValue(true));
-            LeBlancConfig.SubMenu("items").SubMenu("mp").AddItem(new MenuItem("useFlask", "Use Flask").SetValue(true));
-            LeBlancConfig.SubMenu("items").SubMenu("mp").AddItem(new MenuItem("minMp", "Minimum Mana%").SetValue(new Slider(30)));
-
             LeBlancConfig.AddSubMenu(new Menu("Flee", "Flee"));
             LeBlancConfig.SubMenu("Flee").AddItem(new MenuItem("FleeK", "Key").SetValue(new KeyBind('A', KeyBindType.Press)));
             LeBlancConfig.SubMenu("Flee").AddItem(new MenuItem("FleeW", "Use W").SetValue(true));
@@ -73,12 +59,11 @@ namespace LeBlanc
             LeBlancConfig.SubMenu("Draw").AddItem(new MenuItem("drawQ", "Draw Q").SetValue(new Circle(true, Color.AntiqueWhite)));
             LeBlancConfig.SubMenu("Draw").AddItem(new MenuItem("drawW", "Draw W").SetValue(new Circle(true, Color.AntiqueWhite)));
             LeBlancConfig.SubMenu("Draw").AddItem(new MenuItem("drawE", "Draw E").SetValue(new Circle(true, Color.AntiqueWhite)));
-
             MenuItem drawComboDamageMenu = new MenuItem("Draw_ComboDamage", "Draw Combo Damage", true).SetValue(true);
             MenuItem drawFill = new MenuItem("Draw_Fill", "Draw Combo Damage Fill", true).SetValue(new Circle(true, Color.FromArgb(90, 255, 169, 4)));
             LeBlancConfig.SubMenu("Draw").AddItem(drawComboDamageMenu);
             LeBlancConfig.SubMenu("Draw").AddItem(drawFill);
-            DamageIndicator.DamageToUnit = Damages.Combo;
+            DamageIndicator.DamageToUnit = Damages.GetComboDamage;
             DamageIndicator.Enabled = drawComboDamageMenu.GetValue<bool>();
             DamageIndicator.Fill = drawFill.GetValue<Circle>().Active;
             DamageIndicator.FillColor = drawFill.GetValue<Circle>().Color;

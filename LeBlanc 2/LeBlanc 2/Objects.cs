@@ -2,7 +2,7 @@
 using LeagueSharp;
 using SharpDX;
 
-namespace LeBlanc
+namespace LeBlanc_2
 {
     internal class Objects
     {

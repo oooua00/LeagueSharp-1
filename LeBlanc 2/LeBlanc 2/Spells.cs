@@ -1,7 +1,7 @@
 ﻿using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace LeBlanc
+namespace LeBlanc_2
 {
     internal class Spells
     {

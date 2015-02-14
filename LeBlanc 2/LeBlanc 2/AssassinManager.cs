@@ -4,7 +4,7 @@ using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace LeBlanc
+namespace LeBlanc_2
 {
     internal class AssassinManager
     {

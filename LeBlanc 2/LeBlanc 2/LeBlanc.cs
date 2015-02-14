@@ -3,7 +3,7 @@ using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace LeBlanc
+namespace LeBlanc_2
 {
     internal class LeBlanc
     {
@@ -55,17 +55,20 @@ namespace LeBlanc
 
             Other();
 
-            if (LeBlancConfig.Item("haraKey").GetValue<KeyBind>().Active && Configs.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Mixed)
+            if (LeBlancConfig.Item("haraKey").GetValue<KeyBind>().Active)
                 Harass();
         }
 
         private static void Other()
         {
+            if (W.Instance.Name == "LeblancSlide")
+                return;
+
             var wposex = Objects.SecondW.Pos.Extend(Game.CursorPos, 100);
             var fleepos = wposex.Distance(Objects.SecondW.Pos) > Game.CursorPos.Distance(Objects.SecondW.Pos);
             var useW = LeBlancConfig.SubMenu("Misc").SubMenu("backW").Item("SWpos").GetValue<bool>();
 
-            if (fleepos && useW && W.Instance.Name != "LeblancSlide")
+            if (fleepos && useW)
             {
                 W.Cast(Player, PacketCast);
             }
@@ -74,10 +77,12 @@ namespace LeBlanc
         #region Combo
         private static void GapClose(Obj_AI_Base t)
         {
-            var dmg = Damages.Combo(t) - Player.CalcDamage(t, Damage.DamageType.Magical, new[] { 85, 125, 165, 205, 245 }[Q.Level] + 0.6 * Player.TotalMagicalDamage()) > t.Health;
+            if (t.IsInvulnerable || !t.IsTargetable)
+                return;
+
             var useW = LeBlancConfig.SubMenu("Combo").Item("useW").GetValue<bool>();
 
-            if (!dmg || Q.IsInRange(t) || !useW)
+            if (!Player.IsKillable(t, new[] { Tuple.Create(SpellSlot.Q, 0), Tuple.Create(SpellSlot.E, 0), Tuple.Create(SpellSlot.R, 0) }) || Q.IsInRange(t) || !useW)
             {
                 Combo(t);
                 return;
@@ -108,7 +113,7 @@ namespace LeBlanc
                 {
                     case "LeblancChaosOrbM":
                     {
-                        if (W.Level <= Q.Level || (!Q.IsReady() && !W.IsReady()))
+                        if (W.Level <= Q.Level || (!Q.IsReady() && !W.IsReady()) || !Spells.W.IsInRange(t))
                         {
                             R.CastOnUnit(t, PacketCast);
                         }
@@ -117,7 +122,7 @@ namespace LeBlanc
 
                     case "LeblancSlideM":
                     {
-                        if (W.Level > Q.Level || (!Q.IsReady() && !W.IsReady()))
+                        if (t.IsValidTarget(Spells.W.Range) && W.Level > Q.Level)
                         {
                             R.Cast(t, PacketCast);
                         }
@@ -126,7 +131,7 @@ namespace LeBlanc
 
                     case "LeblancSoulShackleM":
                     {
-                        if (Player.MoveSpeed - 10 < t.MoveSpeed || (!Q.IsReady() && !W.IsReady() && !E.IsReady()))
+                        if ((!Q.IsReady() && !W.IsReady() && !E.IsReady()))
                         {
                             R.CastIfHitchanceEquals(t, hitR, PacketCast);
                         }
@@ -194,7 +199,7 @@ namespace LeBlanc
             var useW = LeBlancConfig.Item("useW").GetValue<bool>();
             var useE = LeBlancConfig.Item("useE").GetValue<bool>();
 
-            if (!mana)
+            if (!mana || t == null)
             {
                 return;
             }
@@ -203,7 +208,7 @@ namespace LeBlanc
                 E.CastIfHitchanceEquals(t, HitChance.VeryHigh, PacketCast);
             if (useQ)
                 Q.CastOnUnit(t, PacketCast);
-            if (useW && W.Instance.Name == "LeblancSlide")
+            if (useW && W.Instance.Name == "LeblancSlide" && !Q.IsReady())
                 W.Cast(t, PacketCast);
             if (LeBlancConfig.Item("use2W").GetValue<bool>() && W.Instance.Name != "LeblancSlide")
                 W.Cast(Player, PacketCast);
@@ -228,7 +233,7 @@ namespace LeBlanc
             {
                 R.Cast(Game.CursorPos, PacketCast);
             }
-            if (useE)
+            if (useE && t != null)
                 E.CastIfHitchanceEquals(t, HitChance.Medium, PacketCast);
         }
 

@@ -4,11 +4,12 @@ using LeagueSharp.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
 
-namespace LeBlanc
+namespace LeBlanc_2
 {
     internal class Drawings
     {
         private static readonly Obj_AI_Hero Player = ObjectManager.Player;
+
         public static void Init()
         {
             Drawing.OnDraw += OnDraw;
@@ -16,7 +17,7 @@ namespace LeBlanc
 
         private static void OnDraw(EventArgs args)
         {
-            if (ObjectManager.Player.IsDead)
+            if (ObjectManager.Player.IsDead || args == null)
                 return;
 
             var q = Configs.LeBlancConfig.Item("drawQ").GetValue<Circle>();

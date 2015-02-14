@@ -1,1 +1,12 @@
 C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\LeBlanc 2.exe.config
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\LeBlanc 2.exe
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\LeBlanc 2.pdb
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\LeagueSharp.Common.dll
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\LeagueSharp.dll
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\SharpDX.dll
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\SharpDX.Direct3D9.dll
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\clipper_library.dll
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\bin\x86\Debug\LeagueSharp.xml
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\obj\x86\Debug\LeBlanc 2.csprojResolveAssemblyReference.cache
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\obj\x86\Debug\LeBlanc 2.exe
+C:\Users\Administrator\Documents\Projects\LeBlanc 2\LeBlanc 2\obj\x86\Debug\LeBlanc 2.pdb

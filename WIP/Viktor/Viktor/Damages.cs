@@ -1,13 +1,12 @@
 ﻿using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace Victor
+namespace Viktor
 {
     internal class Damages
     {
         private static readonly Obj_AI_Hero Player = ObjectManager.Player;
         private static readonly Spell Q = Spells.Spell[SpellSlot.Q];
-        private static readonly Spell W = Spells.Spell[SpellSlot.W];
         private static readonly Spell E = Spells.Spell[SpellSlot.E];
         private static readonly Spell R = Spells.Spell[SpellSlot.R];
         public static class Dmg
@@ -15,11 +14,6 @@ namespace Victor
             public static float Q(Obj_AI_Base enemy)
             {
                 return (float) Player.GetSpellDamage(enemy, SpellSlot.Q);
-            }
-
-            public static float W(Obj_AI_Base enemy)
-            {
-                return (float) Player.GetSpellDamage(enemy, SpellSlot.W);
             }
 
             public static float E(Obj_AI_Base enemy)
@@ -65,11 +59,6 @@ namespace Victor
             {
                 dmg += Dmg.Q(enemy);
                 usedMana += ManaCost.Q;
-            }
-            if (W.IsReady() && mana >= usedMana + ManaCost.W)
-            {
-                dmg += Dmg.W(enemy);
-                usedMana += ManaCost.W;
             }
             if (E.IsReady() && mana >= usedMana + ManaCost.E)
             {

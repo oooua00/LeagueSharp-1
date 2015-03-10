@@ -4,7 +4,7 @@ using System.Drawing;
 using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace Victor
+namespace Viktor
 {
     internal class Drawing
     {
@@ -13,7 +13,7 @@ namespace Victor
 
         public static void Init()
         {
-            //DamageInd();
+            DamageInd();
             LeagueSharp.Drawing.OnDraw += OnDraw;
         }
 
@@ -64,8 +64,8 @@ namespace Victor
             var drawR = Config.ViktorConfig.Item("apollo.viktor.draw.r").GetValue<Circle>();
             if (drawR.Active && Spell[SpellSlot.R].Level > 0)
                 Render.Circle.DrawCircle(Player.Position, Spell[SpellSlot.R].Range, cdR ? drawCd.Color : drawR.Color);
-            if (Mechanics.ChaosStorm != null)
-                Render.Circle.DrawCircle(Mechanics.ChaosStorm.Position.To2D().To3D(), 0, Color.Red, (int)Spell[SpellSlot.R].Width);
+            /*if (Mechanics.ChaosStorm != null)
+                Render.Circle.DrawCircle(Mechanics.ChaosStorm.Position.To2D().To3D(), 0, Color.Red, (int)Spell[SpellSlot.R].Width);*/
         }
     }
 }

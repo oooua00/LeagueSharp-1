@@ -1,9 +1,8 @@
-﻿using System;
-using LeagueSharp;
+﻿using LeagueSharp;
 using LeagueSharp.Common;
 using Color = System.Drawing.Color;
 
-namespace Victor
+namespace Viktor
 {
     internal class Config
     {
@@ -28,6 +27,7 @@ namespace Victor
             {
                 var q = new Menu("Q", "apollo.viktor.combo.q");
                 q.AddItem(new MenuItem("apollo.viktor.combo.q.bool", "Use in Combo").SetValue(true));
+                q.AddItem(new MenuItem("apollo.viktor.combo.q.dont", "Only use if in AA Range").SetValue(false));
                 combo.AddSubMenu(q);
 
                 var w = new Menu("W", "apollo.viktor.combo.w");
@@ -46,6 +46,9 @@ namespace Victor
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.bool", "Use in Combo").SetValue(true));
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.kill", "Use if enemy is killable").SetValue(true));
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.hit", "Use if min hit").SetValue(new Slider(3, 1, 5)));
+                r.AddItem(
+                    new MenuItem("apollo.viktor.combo.r.minhp", "Dont ult if target has hp%").SetValue(
+                        new Slider(10)));
                 combo.AddSubMenu(r);
 
                 ViktorConfig.AddSubMenu(combo);
@@ -89,6 +92,21 @@ namespace Victor
                 laneclear.AddItem(new MenuItem("apollo.viktor.laneclear.mana", "Min Mana%").SetValue(new Slider(30)));
 
                 ViktorConfig.AddSubMenu(laneclear);
+            }
+
+            //Killsteal
+            var killsteal = new Menu("Killsteal", "apollo.viktor.ks");
+            {
+                killsteal.AddItem(new MenuItem("apollo.viktor.ks.e.bool", "Use E").SetValue(true));
+
+                ViktorConfig.AddSubMenu(killsteal);
+            }
+
+            //AntiGapcloser
+            var gapcloser = new Menu("AntiGapcloser", "apollo.viktor.gapcloser");
+            {
+                gapcloser.AddItem(new MenuItem("apollo.viktor.gapcloser.w.bool", "Use W").SetValue(true));
+                ViktorConfig.AddSubMenu(gapcloser);
             }
 
             //Interrupter

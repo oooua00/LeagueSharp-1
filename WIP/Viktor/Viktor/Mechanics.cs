@@ -5,7 +5,7 @@ using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
 
-namespace Victor
+namespace Viktor
 {
     internal class Mechanics
     {
@@ -19,6 +19,8 @@ namespace Victor
             Game.OnUpdate += OnUpdate;
             GameObject.OnCreate += OnCreate;
             GameObject.OnDelete += OnDelete;
+            Interrupter2.OnInterruptableTarget += OnInterruptableTarget;
+            AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
         }
 
         private static void OnUpdate(EventArgs args)
@@ -26,6 +28,7 @@ namespace Victor
             if (args == null || Player.IsDead || Player.IsRecalling())
                 return;
             AutoFollowR();
+            KillSteal();
            
             switch (Config.Orbwalker.ActiveMode)
             {
@@ -37,6 +40,7 @@ namespace Victor
                 case Orbwalking.OrbwalkingMode.LaneClear:
                 {
                     Laneclear();
+                    Jungleclear();
                     break;
                 }
                 case Orbwalking.OrbwalkingMode.Mixed:
@@ -84,7 +88,6 @@ namespace Victor
             if (useE)
                 CastE(t, preE);
         }
-
         private static void Laneclear()
         {
             var mana = Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
@@ -115,7 +118,7 @@ namespace Victor
                         .FirstOrDefault();
                 if (lastHitQ && minionLasthit != null)
                 {
-                    Spell[SpellSlot.Q].CastOnUnit(minionLasthit, PacketCast);
+                    Spell[SpellSlot.Q].Cast(minionLasthit, PacketCast);
                 }
 
                 var canonLasthit =
@@ -132,7 +135,7 @@ namespace Victor
                         .FirstOrDefault();
                 if (lastHitCanonQ && canonLasthit != null)
                 {
-                    Spell[SpellSlot.Q].CastOnUnit(canonLasthit, PacketCast);
+                    Spell[SpellSlot.Q].Cast(canonLasthit, PacketCast);
                 }
 
             }
@@ -182,7 +185,9 @@ namespace Victor
                     }
                 }
 
-                if (hitListShort.Count > 0)
+                if (hitListShort.Count > 0 &&
+                    hitListShort.OrderBy(h => h.MinionsHit).FirstOrDefault().MinionsHit >=
+                    hitListLong.OrderBy(h => h.MinionsHit).FirstOrDefault().MinionsHit)
                 {
                     var pos1 = hitListShort.OrderBy(h => h.MinionsHit).FirstOrDefault();
                     var pos2 = hitListShortPos[pos1];
@@ -205,13 +210,65 @@ namespace Victor
 
 
         }
-        private static void CastQ(Obj_AI_Base t)
+        private static void Jungleclear()
         {
-            if (!Spell[SpellSlot.Q].IsReady() || t == null)
+            var minions = MinionManager.GetMinions(
+                Player.ServerPosition, 1225, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+            var minionsQ = minions.Where(h => h.IsValidTarget(Spell[SpellSlot.Q].Range)).OrderBy(h => h.MaxHealth);
+            var mana = Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
+
+            if (minions == null || mana > Player.ManaPercent)
                 return;
 
-            if (t.IsValidTarget(Spell[SpellSlot.Q].Range))
-                Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
+            var useQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.bool").GetValue<bool>();
+            var useE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.bool").GetValue<bool>();
+
+            if (useQ && Spell[SpellSlot.Q].IsReady() && minionsQ != null)
+            {
+                Spell[SpellSlot.Q].Cast(minionsQ.FirstOrDefault(), PacketCast);
+            }
+
+            if (useE && Spell[SpellSlot.E].IsReady())
+            {
+                if (Player.Distance(minions.FirstOrDefault()) < Spells.ECastRange)
+                {
+                    var sourcePosition = minions.FirstOrDefault().ServerPosition;
+                    Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
+                    var lineFarm =
+                        MinionManager.GetBestLineFarmLocation(
+                            minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                            Spell[SpellSlot.E].Range);
+                    Spell[SpellSlot.E].Cast(sourcePosition, lineFarm.Position.To3D());
+                }
+                else
+                {
+                    var sourcePosition = Player.ServerPosition.Extend(minions.FirstOrDefault().ServerPosition, Spells.ECastRange);
+                    Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
+                    var lineFarm =
+                        MinionManager.GetBestLineFarmLocation(
+                            minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                            Spell[SpellSlot.E].Range);
+                    Spell[SpellSlot.E].Cast(sourcePosition, lineFarm.Position.To3D());
+                }
+            }
+
+
+        }
+        private static void CastQ(Obj_AI_Base t)
+        {
+            if (!Spell[SpellSlot.Q].IsReady() || t == null || !Spell[SpellSlot.Q].IsInRange(t))
+                return;
+            if (Orbwalking.InAutoAttackRange(t))
+            {
+                Orbwalking.BeforeAttack += eventArgs =>
+                {
+                    Spell[SpellSlot.Q].Cast(t, PacketCast); 
+                };
+            }
+            else if (!Config.ViktorConfig.Item("apollo.viktor.combo.q.dont").GetValue<bool>())
+            {
+                Spell[SpellSlot.Q].Cast(t, PacketCast);
+            }
         }
         private static void CastW()
         {
@@ -260,7 +317,6 @@ namespace Victor
                     Spell[SpellSlot.W].Cast(tpre.CastPosition, PacketCast);
                 }
             }
-
         }
         private static void CastE(Obj_AI_Base t, HitChance hit)
         {
@@ -280,7 +336,6 @@ namespace Victor
             else if (Player.Distance(t.ServerPosition) < Spells.ECastRange + Spell[SpellSlot.E].Range && Spell[SpellSlot.E].IsReady())
             {
                 var sourcePosition = Player.ServerPosition.Extend(t.ServerPosition, Spells.ECastRange);
-                Spell[SpellSlot.E].Speed = Spell[SpellSlot.E].Speed * 0.9f;
                 Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
                 var preE = Spell[SpellSlot.E].GetPrediction(t, true);
                 if (preE.Hitchance >= hit)
@@ -298,7 +353,8 @@ namespace Victor
             var preR = Spell[SpellSlot.R].GetPrediction(t, true);
             if (t.IsValidTarget(Spell[SpellSlot.R].Range) &&
                 Config.ViktorConfig.Item("apollo.viktor.combo.r.kill").GetValue<bool>() &&
-                Damages.ComboDmg(t) > t.Health)
+                Damages.ComboDmg(t) > t.Health &&
+                t.HealthPercent > Config.ViktorConfig.Item("apollo.viktor.combo.r.minhp").GetValue<Slider>().Value)
             {
                 Spell[SpellSlot.R].Cast(t, PacketCast, true);
             }
@@ -308,7 +364,6 @@ namespace Victor
                 Spell[SpellSlot.R].Cast(preR.CastPosition, PacketCast);
             }
         }
-
         private static void AutoFollowR()
         {
             if (ChaosStorm != null)
@@ -317,6 +372,72 @@ namespace Victor
                     600, TargetSelector.DamageType.Magical, true, null, ChaosStorm.Position.To2D().To3D());
 
                 Utility.DelayAction.Add(400, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
+            }
+        }
+        private static void KillSteal()
+        {
+            var useE = Config.ViktorConfig.Item("apollo.viktor.ks.e.bool").GetValue<bool>();
+            var t =
+                HeroManager.Enemies.Where(
+                    h =>
+                        h.IsValidTarget(1225) &&
+                        HealthPrediction.GetHealthPrediction(
+                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) < Damages.Dmg.Q(h) &&
+                        HealthPrediction.GetHealthPrediction(
+                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
+                    .OrderBy(h => h.Health)
+                    .FirstOrDefault();
+            if (t == null)
+                return;
+            if (useE && Spell[SpellSlot.E].IsReady())
+            {
+                if (Player.Distance(t) < Spells.ECastRange)
+                {
+                    var sourcePosition = t.ServerPosition;
+                    Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
+                    var preE = Spell[SpellSlot.E].GetPrediction(t, true);
+
+                    Spell[SpellSlot.E].Cast(sourcePosition, preE.CastPosition);
+                }
+                else
+                {
+                    var sourcePosition = Player.ServerPosition.Extend(t.ServerPosition, Spells.ECastRange);
+                    Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
+                    var preE = Spell[SpellSlot.E].GetPrediction(t, true);
+
+                    Spell[SpellSlot.E].Cast(sourcePosition, preE.CastPosition);
+                }
+            }
+
+
+        }
+        private static void OnEnemyGapcloser(ActiveGapcloser gapcloser)
+        {
+            if (Config.ViktorConfig.Item("apollo.viktor.gapcloser.w.bool").GetValue<bool>() &&
+                Player.Distance(gapcloser.Sender) < Orbwalking.GetRealAutoAttackRange(Player) &&
+                Spell[SpellSlot.W].IsReady())
+            {
+                Spell[SpellSlot.W].Cast(gapcloser.End, PacketCast);
+            }
+        }
+        private static void OnInterruptableTarget(Obj_AI_Hero unit, Interrupter2.InterruptableTargetEventArgs args)
+        {
+            if (args.DangerLevel >= Interrupter2.DangerLevel.High)
+            {
+                var useW = Config.ViktorConfig.Item("apollo.viktor.interrupt.w.bool").GetValue<bool>();
+                var useR = Config.ViktorConfig.Item("apollo.viktor.interrupt.r.bool").GetValue<bool>();
+
+                if (useW && Spell[SpellSlot.W].IsReady() && unit.IsValidTarget(Spell[SpellSlot.W].Range) &&
+                    (Game.Time + 1.5 + Spell[SpellSlot.W].Delay) >= args.EndTime)
+                {
+                    Spell[SpellSlot.W].Cast(unit.ServerPosition, PacketCast);
+                }
+                else if (useR && unit.IsValidTarget(Spell[SpellSlot.R].Range))
+                {
+                    Spell[SpellSlot.R].Cast(unit.ServerPosition, PacketCast);
+                }
             }
         }
         private static void OnCreate(GameObject sender, EventArgs args)
@@ -329,7 +450,6 @@ namespace Victor
                 ChaosStorm = sender;
             }
         }
-
         private static void OnDelete(GameObject sender, EventArgs args)
         {
             if (!sender.IsValid)

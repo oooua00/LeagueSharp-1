@@ -1,7 +1,7 @@
 ﻿using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace Victor
+namespace Viktor
 {
     internal class Loader
     {

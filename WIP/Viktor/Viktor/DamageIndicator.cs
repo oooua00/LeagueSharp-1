@@ -5,7 +5,7 @@ using LeagueSharp.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
 
-namespace Victor
+namespace Viktor
 {
     class DamageIndicator
     {

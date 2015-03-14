@@ -80,6 +80,7 @@
     <Compile Include="Damages.cs" />
     <Compile Include="Drawings.cs" />
     <Compile Include="Helper\Cast.cs" />
+    <Compile Include="Helper\GetHealthPrediction.cs" />
     <Compile Include="Helper\GetHitchance.cs" />
     <Compile Include="Helper\Use.cs" />
     <Compile Include="Loader.cs" />

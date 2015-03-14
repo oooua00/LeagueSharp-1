@@ -145,13 +145,8 @@ namespace Talon
             if (!t.IsValidTarget())
                 return;
 
-            if (
-                HealthPrediction.GetHealthPrediction(
-                    t, (int) (Player.Distance(t) / Spell[SpellSlot.W].Speed),
-                    (int) (Spell[SpellSlot.W].Delay * 1000 + Game.Ping / 2f)) < Damages.Dmg.W(t) &&
-                HealthPrediction.GetHealthPrediction(
-                    t, (int) (Player.Distance(t) / Spell[SpellSlot.W].Speed),
-                    (int) (Spell[SpellSlot.W].Delay * 1000 + Game.Ping / 2f)) > 0)
+            if (Helper.GetHealthPrediction.From(t, Player, SpellSlot.W, Damages.Dmg.W(t), true) &&
+                Helper.GetHealthPrediction.From(t, Player, SpellSlot.W, 0f, false))
             {
                 Spell[SpellSlot.W].CastIfHitchanceEquals(t, HitChance.High, PacketCast);
             }

@@ -13,6 +13,7 @@ namespace Viktor
         private static readonly Obj_AI_Hero Player = ObjectManager.Player;
         private static readonly bool PacketCast = Config.ViktorConfig.Item("apollo.viktor.packetcast").GetValue<bool>();
         public static GameObject ChaosStorm;
+        public static readonly SpellSlot IgniteSlot = Player.GetSpellSlot("SummonerDot");
 
         public static void Init()
         {
@@ -68,6 +69,13 @@ namespace Viktor
             var preE =
                 (HitChance)
                     (Config.ViktorConfig.Item("apollo.viktor.combo.e.pre").GetValue<StringList>().SelectedIndex + 3);
+
+            if (IgniteSlot != SpellSlot.Unknown && IgniteSlot.IsReady() &&
+                Config.ViktorConfig.Item("apollo.viktor.combo.ignite.bool").GetValue<bool>() &&
+                t.Health < Damages.ComboDmg(t))
+            {
+                Player.Spellbook.CastSpell(IgniteSlot, t);
+            }
 
             if (useQ)
                 CastQ(t);

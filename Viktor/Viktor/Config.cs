@@ -51,6 +51,8 @@ namespace Viktor
                         new Slider(10)));
                 combo.AddSubMenu(r);
 
+                combo.AddItem(new MenuItem("apollo.viktor.combo.ignite.bool", "Use Ignite").SetValue(true));
+
                 ViktorConfig.AddSubMenu(combo);
             }
 

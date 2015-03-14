@@ -101,6 +101,10 @@ namespace Viktor
             {
                 dmg += Dmg.R(enemy);
             }
+            if (Mechanics.IgniteSlot != SpellSlot.Unknown && Mechanics.IgniteSlot.IsReady())
+            {
+                dmg += Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
+            }
 
             return (float)dmg;
         }

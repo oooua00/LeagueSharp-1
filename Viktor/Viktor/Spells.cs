@@ -17,7 +17,7 @@ namespace Viktor
         public static void Init()
         {
             Spell[SpellSlot.Q].SetTargetted(0.25f, 2000);
-            Spell[SpellSlot.W].SetSkillshot(1.5f, 300, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Spell[SpellSlot.W].SetSkillshot(0.25f, 300, float.MaxValue, false, SkillshotType.SkillshotCircle);
             Spell[SpellSlot.E].SetSkillshot(0.0f, 90, 1000, false, SkillshotType.SkillshotLine);
             Spell[SpellSlot.R].SetSkillshot(0.25f, 250, float.MaxValue, false, SkillshotType.SkillshotCircle);
         }

@@ -6,32 +6,20 @@ namespace Viktor
 {
     internal class Spells
     {
-        public static readonly int ECastRange = 525;
-        private static readonly Obj_AI_Hero Player = ObjectManager.Player;
+        public static readonly int ECastRange = 540;
         public static readonly Dictionary<SpellSlot, Spell> Spell = new Dictionary<SpellSlot, Spell>
         {
-            { SpellSlot.Q, new Spell(SpellSlot.Q, Player.Spellbook.GetSpell(SpellSlot.Q).SData.CastRange) },
-            { SpellSlot.W, new Spell(SpellSlot.W, Player.Spellbook.GetSpell(SpellSlot.W).SData.CastRange) },
+            { SpellSlot.Q, new Spell(SpellSlot.Q, 700f) },
+            { SpellSlot.W, new Spell(SpellSlot.W, 700f) },
             { SpellSlot.E, new Spell(SpellSlot.E, 700f) },
-            { SpellSlot.R, new Spell(SpellSlot.R, Player.Spellbook.GetSpell(SpellSlot.R).SData.CastRange) }
+            { SpellSlot.R, new Spell(SpellSlot.R, 700f) }
         };
         public static void Init()
         {
-            Spell[SpellSlot.Q].SetTargetted(
-                Player.Spellbook.GetSpell(SpellSlot.Q).SData.SpellCastTime,
-                Player.Spellbook.GetSpell(SpellSlot.Q).SData.MissileSpeed);
-            Spell[SpellSlot.W].SetSkillshot(
-                Player.Spellbook.GetSpell(SpellSlot.W).SData.SpellCastTime,
-                Player.Spellbook.GetSpell(SpellSlot.W).SData.LineWidth,
-                Player.Spellbook.GetSpell(SpellSlot.W).SData.MissileSpeed, false, SkillshotType.SkillshotCircle);
-            Spell[SpellSlot.E].SetSkillshot(
-                Player.Spellbook.GetSpell(SpellSlot.E).SData.SpellCastTime,
-                Player.Spellbook.GetSpell(SpellSlot.E).SData.LineWidth,
-                Player.Spellbook.GetSpell(SpellSlot.E).SData.MissileSpeed, false, SkillshotType.SkillshotLine);
-            Spell[SpellSlot.R].SetSkillshot(
-                Player.Spellbook.GetSpell(SpellSlot.R).SData.SpellCastTime,
-                Player.Spellbook.GetSpell(SpellSlot.R).SData.LineWidth,
-                Player.Spellbook.GetSpell(SpellSlot.R).SData.MissileSpeed, false, SkillshotType.SkillshotCircle);
+            Spell[SpellSlot.Q].SetTargetted(0.25f, 2000);
+            Spell[SpellSlot.W].SetSkillshot(1.5f, 300, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Spell[SpellSlot.E].SetSkillshot(0.0f, 90, 1000, false, SkillshotType.SkillshotLine);
+            Spell[SpellSlot.R].SetSkillshot(0.25f, 250, float.MaxValue, false, SkillshotType.SkillshotCircle);
         }
     }
 }

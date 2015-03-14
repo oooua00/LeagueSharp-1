@@ -29,6 +29,14 @@ namespace Viktor
                 return;
             AutoFollowR();
             KillSteal();
+
+            var key = Config.ViktorConfig.Item("apollo.viktor.harass.key").GetValue<KeyBind>();
+            if (key.Active)
+            {
+                Harass();
+            }
+            Notifications.AddNotification("AutoHarass: " + key.Active.ToString(), 1, false);
+            Notifications.AddNotification("PacketCast: " + PacketCast.ToString(), 1, false);
            
             switch (Config.Orbwalker.ActiveMode)
             {
@@ -52,7 +60,7 @@ namespace Viktor
         }
         private static void Combo()
         {
-            var t = TargetSelector.GetTarget(1225, TargetSelector.DamageType.Magical);
+            var t = TargetSelector.GetTarget(Spell[SpellSlot.E].Range + Spells.ECastRange, TargetSelector.DamageType.Magical);
             var useQ = Config.ViktorConfig.Item("apollo.viktor.combo.q.bool").GetValue<bool>();
             var useW = Config.ViktorConfig.Item("apollo.viktor.combo.w.bool").GetValue<bool>();
             var useE = Config.ViktorConfig.Item("apollo.viktor.combo.e.bool").GetValue<bool>();
@@ -141,7 +149,7 @@ namespace Viktor
             }
             if (useE && Spell[SpellSlot.E].IsReady())
             {
-                var minions = MinionManager.GetMinions(Player.ServerPosition, 1225);
+                var minions = MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.E].Range + Spells.ECastRange);
 
                 if (minions == null)
                     return;
@@ -213,7 +221,7 @@ namespace Viktor
         private static void Jungleclear()
         {
             var minions = MinionManager.GetMinions(
-                Player.ServerPosition, 1225, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+                Player.ServerPosition, Spell[SpellSlot.E].Range + Spells.ECastRange, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
             var minionsQ = minions.Where(h => h.IsValidTarget(Spell[SpellSlot.Q].Range)).OrderBy(h => h.MaxHealth);
             var mana = Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
 
@@ -380,7 +388,7 @@ namespace Viktor
             var t =
                 HeroManager.Enemies.Where(
                     h =>
-                        h.IsValidTarget(1225) &&
+                        h.IsValidTarget(Spell[SpellSlot.E].Range + Spells.ECastRange) &&
                         HealthPrediction.GetHealthPrediction(
                             h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                             (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) < Damages.Dmg.Q(h) &&

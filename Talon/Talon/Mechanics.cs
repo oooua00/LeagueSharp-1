@@ -99,7 +99,7 @@ namespace Talon
             if (Spell[SpellSlot.E].IsReady() && Helper.Use.E(Orbwalking.OrbwalkingMode.Combo) &&
                 t.IsValidTarget(Spell[SpellSlot.E].Range))
             {
-                Spell[SpellSlot.E].Cast(t, PacketCast);
+                Spell[SpellSlot.E].CastOnUnit(t, PacketCast);
             }
 
             if (Spell[SpellSlot.R].IsReady() && Helper.Use.R(Orbwalking.OrbwalkingMode.Combo) &&
@@ -132,7 +132,7 @@ namespace Talon
             }
             if (Spell[SpellSlot.E].IsReady() && Helper.Use.E(Orbwalking.OrbwalkingMode.Mixed))
             {
-                Spell[SpellSlot.E].Cast(t, PacketCast);
+                Spell[SpellSlot.E].CastOnUnit(t, PacketCast);
             }
         }
         private static void Killsteal()

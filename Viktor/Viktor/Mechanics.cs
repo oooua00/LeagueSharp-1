@@ -134,7 +134,7 @@ namespace Viktor
                         .FirstOrDefault();
                 if (lastHitQ && minionLasthit != null)
                 {
-                    Spell[SpellSlot.Q].Cast(minionLasthit, PacketCast);
+                    Spell[SpellSlot.Q].CastOnUnit(minionLasthit, PacketCast);
                 }
 
                 var canonLasthit =
@@ -151,7 +151,7 @@ namespace Viktor
                         .FirstOrDefault();
                 if (lastHitCanonQ && canonLasthit != null)
                 {
-                    Spell[SpellSlot.Q].Cast(canonLasthit, PacketCast);
+                    Spell[SpellSlot.Q].CastOnUnit(canonLasthit, PacketCast);
                 }
 
             }
@@ -241,7 +241,7 @@ namespace Viktor
 
             if (useQ && Spell[SpellSlot.Q].IsReady() && minionsQ != null)
             {
-                Spell[SpellSlot.Q].Cast(minionsQ.FirstOrDefault(), PacketCast);
+                Spell[SpellSlot.Q].CastOnUnit(minionsQ.FirstOrDefault(), PacketCast);
             }
 
             if (useE && Spell[SpellSlot.E].IsReady())
@@ -278,12 +278,12 @@ namespace Viktor
             {
                 Orbwalking.BeforeAttack += eventArgs =>
                 {
-                    Spell[SpellSlot.Q].Cast(t, PacketCast); 
+                    Spell[SpellSlot.Q].CastOnUnit(t, PacketCast); 
                 };
             }
             else if (!Config.ViktorConfig.Item("apollo.viktor.combo.q.dont").GetValue<bool>())
             {
-                Spell[SpellSlot.Q].Cast(t, PacketCast);
+                Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
             }
         }
         private static void CastW()

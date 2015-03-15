@@ -19,23 +19,7 @@ namespace Talon
 
         private static void DamageInd()
         {
-            var drawComboDamageBool = Config.TalonConfig.Item("apollo.talon.draw.ind.bool");
-            var drawComboDamageFill = Config.TalonConfig.Item("apollo.talon.draw.ind.fill");
             DamageIndicator.DamageToUnit = Damages.ComboDmg;
-            DamageIndicator.Enabled = drawComboDamageBool.GetValue<bool>();
-            DamageIndicator.Fill = drawComboDamageFill.GetValue<Circle>().Active;
-            DamageIndicator.FillColor = drawComboDamageFill.GetValue<Circle>().Color;
-            drawComboDamageBool.ValueChanged +=
-                delegate(object sender, OnValueChangeEventArgs eventArgs)
-                {
-                    DamageIndicator.Enabled = eventArgs.GetNewValue<bool>();
-                };
-            drawComboDamageFill.ValueChanged +=
-                delegate(object sender, OnValueChangeEventArgs eventArgs)
-                {
-                    DamageIndicator.Fill = eventArgs.GetNewValue<Circle>().Active;
-                    DamageIndicator.FillColor = eventArgs.GetNewValue<Circle>().Color;
-                };
         }
 
         private static void OnDraw(EventArgs args)

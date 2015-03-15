@@ -36,8 +36,8 @@ namespace Viktor
             {
                 Harass();
             }
-            Notifications.AddNotification("AutoHarass: " + key.Active.ToString(), 1, false);
-            Notifications.AddNotification("PacketCast: " + PacketCast.ToString(), 1, false);
+            //Notifications.AddNotification("AutoHarass: " + key.Active.ToString(), 1, false);
+            //Notifications.AddNotification("PacketCast: " + PacketCast.ToString(), 1, false);
            
             switch (Config.Orbwalker.ActiveMode)
             {

@@ -29,8 +29,8 @@ namespace Talon
                 Harass();
 
             //Notifications
-            Notifications.AddNotification("Auto Harass: " + harassKey.Active.ToString(), 1, false);
-            Notifications.AddNotification("PacketCast: " + PacketCast.ToString(), 1, false);
+            //Notifications.AddNotification("Auto Harass: " + harassKey.Active.ToString(), 1, false);
+            //Notifications.AddNotification("PacketCast: " + PacketCast.ToString(), 1, false);
 
 
             switch (Config.Orbwalker.ActiveMode)

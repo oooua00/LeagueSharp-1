@@ -1,4 +1,9 @@
-﻿using System;
+﻿// ReSharper disable ConditionIsAlwaysTrueOrFalse
+// ReSharper disable InvertIf
+// ReSharper disable FunctionComplexityOverflow
+// ReSharper disable ConvertClosureToMethodGroup
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
@@ -7,12 +12,12 @@ using SharpDX;
 
 namespace Viktor
 {
-    internal class Mechanics
+    internal static class Mechanics
     {
         private static readonly Dictionary<SpellSlot, Spell> Spell = Spells.Spell;
         private static readonly Obj_AI_Hero Player = ObjectManager.Player;
         private static readonly bool PacketCast = Config.ViktorConfig.Item("apollo.viktor.packetcast").GetValue<bool>();
-        public static GameObject ChaosStorm;
+        private static GameObject _chaosStorm;
         public static readonly SpellSlot IgniteSlot = Player.GetSpellSlot("SummonerDot");
 
         public static void Init()
@@ -27,18 +32,20 @@ namespace Viktor
         private static void OnUpdate(EventArgs args)
         {
             if (args == null || Player.IsDead || Player.IsRecalling())
+            {
                 return;
+            }
             AutoFollowR();
             KillSteal();
 
-            var key = Config.ViktorConfig.Item("apollo.viktor.harass.key").GetValue<KeyBind>();
+            KeyBind key = Config.ViktorConfig.Item("apollo.viktor.harass.key").GetValue<KeyBind>();
             if (key.Active)
             {
                 Harass();
             }
             //Notifications.AddNotification("AutoHarass: " + key.Active.ToString(), 1, false);
             //Notifications.AddNotification("PacketCast: " + PacketCast.ToString(), 1, false);
-           
+
             switch (Config.Orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -59,14 +66,16 @@ namespace Viktor
                 }
             }
         }
+
         private static void Combo()
         {
-            var t = TargetSelector.GetTarget(Spell[SpellSlot.E].Range + Spells.ECastRange, TargetSelector.DamageType.Magical);
-            var useQ = Config.ViktorConfig.Item("apollo.viktor.combo.q.bool").GetValue<bool>();
-            var useW = Config.ViktorConfig.Item("apollo.viktor.combo.w.bool").GetValue<bool>();
-            var useE = Config.ViktorConfig.Item("apollo.viktor.combo.e.bool").GetValue<bool>();
-            var useR = Config.ViktorConfig.Item("apollo.viktor.combo.r.bool").GetValue<bool>();
-            var preE =
+            Obj_AI_Hero t = TargetSelector.GetTarget(
+                Spell[SpellSlot.E].Range + Spells.ECastRange, TargetSelector.DamageType.Magical);
+            bool useQ = Config.ViktorConfig.Item("apollo.viktor.combo.q.bool").GetValue<bool>();
+            bool useW = Config.ViktorConfig.Item("apollo.viktor.combo.w.bool").GetValue<bool>();
+            bool useE = Config.ViktorConfig.Item("apollo.viktor.combo.e.bool").GetValue<bool>();
+            bool useR = Config.ViktorConfig.Item("apollo.viktor.combo.r.bool").GetValue<bool>();
+            HitChance preE =
                 (HitChance)
                     (Config.ViktorConfig.Item("apollo.viktor.combo.e.pre").GetValue<StringList>().SelectedIndex + 3);
 
@@ -78,50 +87,70 @@ namespace Viktor
             }
 
             if (useQ)
+            {
                 CastQ(t);
+            }
             if (useW)
+            {
                 CastW();
+            }
             if (useE)
+            {
                 CastE(t, preE);
+            }
             if (useR)
+            {
                 CastR(t);
+            }
         }
+
         private static void Harass()
         {
-            var t = TargetSelector.GetTarget(1025, TargetSelector.DamageType.Magical);
-            var mana = Config.ViktorConfig.Item("apollo.viktor.harass.mana").GetValue<Slider>().Value;
-            var useQ = Config.ViktorConfig.Item("apollo.viktor.harass.q.bool").GetValue<bool>();
-            var useE = Config.ViktorConfig.Item("apollo.viktor.harass.e.bool").GetValue<bool>();
-            var preE =
+            Obj_AI_Hero t = TargetSelector.GetTarget(1025, TargetSelector.DamageType.Magical);
+            int mana = Config.ViktorConfig.Item("apollo.viktor.harass.mana").GetValue<Slider>().Value;
+            bool useQ = Config.ViktorConfig.Item("apollo.viktor.harass.q.bool").GetValue<bool>();
+            bool useE = Config.ViktorConfig.Item("apollo.viktor.harass.e.bool").GetValue<bool>();
+            HitChance preE =
                 (HitChance)
                     (Config.ViktorConfig.Item("apollo.viktor.harass.e.pre").GetValue<StringList>().SelectedIndex + 3);
 
             if (mana > Player.ManaPercent)
+            {
                 return;
+            }
 
-            if (useQ)
-                CastQ(t);
-            if (useE)
-                CastE(t, preE);
-        }
-        private static void Laneclear()
-        {
-            var mana = Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
-            var useQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.bool").GetValue<bool>();
-            var useE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.bool").GetValue<bool>();
-            var lastHitQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.lasthit").GetValue<bool>();
-            var lastHitCanonQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.canon").GetValue<bool>();
-
-            if (mana < Player.ManaPercent)
-                return;
             if (useQ)
             {
-                var minions = MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.Q].Range);
+                CastQ(t);
+            }
+            if (useE)
+            {
+                CastE(t, preE);
+            }
+        }
+
+        private static void Laneclear()
+        {
+            int mana = Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
+            bool useQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.bool").GetValue<bool>();
+            bool useE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.bool").GetValue<bool>();
+            bool lastHitQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.lasthit").GetValue<bool>();
+            bool lastHitCanonQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.canon").GetValue<bool>();
+
+            if (mana < Player.ManaPercent)
+            {
+                return;
+            }
+            if (useQ)
+            {
+                List<Obj_AI_Base> minions = MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.Q].Range);
 
                 if (minions == null)
+                {
                     return;
+                }
 
-                var minionLasthit =
+                Obj_AI_Base minionLasthit =
                     minions.Where(
                         h =>
                             HealthPrediction.GetHealthPrediction(
@@ -137,7 +166,7 @@ namespace Viktor
                     Spell[SpellSlot.Q].CastOnUnit(minionLasthit, PacketCast);
                 }
 
-                var canonLasthit =
+                Obj_AI_Base canonLasthit =
                     minions.Where(
                         h =>
                             h.BaseSkinName.Contains("Siege") &&
@@ -153,26 +182,30 @@ namespace Viktor
                 {
                     Spell[SpellSlot.Q].CastOnUnit(canonLasthit, PacketCast);
                 }
-
             }
             if (useE && Spell[SpellSlot.E].IsReady())
             {
-                var minions = MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.E].Range + Spells.ECastRange);
+                List<Obj_AI_Base> minions = MinionManager.GetMinions(
+                    Player.ServerPosition, Spell[SpellSlot.E].Range + Spells.ECastRange);
 
                 if (minions == null)
+                {
                     return;
+                }
 
-                var minionsShort = minions.Where(h => h.IsValidTarget(Spells.ECastRange)).ToList();
-                var minhit = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.hit").GetValue<Slider>().Value;
-                var hitListLong = new List<MinionManager.FarmLocation>();
-                var hitListLongPos = new Dictionary<MinionManager.FarmLocation, Vector3>();
-                var hitListShort = new List<MinionManager.FarmLocation>();
-                var hitListShortPos = new Dictionary<MinionManager.FarmLocation, Vector3>();
+                List<Obj_AI_Base> minionsShort = minions.Where(h => h.IsValidTarget(Spells.ECastRange)).ToList();
+                int minhit = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.hit").GetValue<Slider>().Value;
+                List<MinionManager.FarmLocation> hitListLong = new List<MinionManager.FarmLocation>();
+                Dictionary<MinionManager.FarmLocation, Vector3> hitListLongPos =
+                    new Dictionary<MinionManager.FarmLocation, Vector3>();
+                List<MinionManager.FarmLocation> hitListShort = new List<MinionManager.FarmLocation>();
+                Dictionary<MinionManager.FarmLocation, Vector3> hitListShortPos =
+                    new Dictionary<MinionManager.FarmLocation, Vector3>();
 
-                foreach (var minion in minionsShort)
+                foreach (Obj_AI_Base minion in minionsShort)
                 {
                     Spell[SpellSlot.E].UpdateSourcePosition(minion.ServerPosition, minion.ServerPosition);
-                    var lineFarm =
+                    MinionManager.FarmLocation lineFarm =
                         MinionManager.GetBestLineFarmLocation(
                             minionsShort.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
                             Spell[SpellSlot.E].Range);
@@ -183,13 +216,79 @@ namespace Viktor
                         hitListShortPos.Add(lineFarm, minion.ServerPosition);
                     }
                 }
-                for (var i = 0f; i < 360; i ++)
+
+                //0 create checked angle array
+                double[] cangles = new double[0x168];
+                int canglesc = 0;
+
+                //1
+                Vector2 playDirFace = Player.Direction.To2D();
+                //gen raw vectors to create cone
+                Vector2[] rawCone = new Vector2[0x3]
                 {
-                    var angleRad = Geometry.DegreeToRadian(i);
-                    var direction = ObjectManager.Player.Direction.To2D().Perpendicular();
-                    var rotatedPosition = (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad))).To3D();
+                    playDirFace, new Vector2(playDirFace.X - 425, playDirFace.Y + 1275),
+                    new Vector2(playDirFace.X + 425, playDirFace.Y + 1275)
+                };
+                //convert raw cone to points (I just use this to keep my code readable could just as well use Vector2.X and Vector2.Y)
+                Point a = new Point((int) rawCone[1].X, (int) rawCone[1].Y);
+                Point b = new Point((int) rawCone[0].X, (int) rawCone[0].Y);
+                Point c = new Point((int) rawCone[2].X, (int) rawCone[2].Y);
+                //using dot product to find the angle, dot product: math is fun boyz
+                //a.b = (|ba|*|bc|)*cos(α)
+                //a.b = ax*bx+ay*by = |ba|*|bc|*cos(α)
+                //α = acos((ax*bx+ay*by)/(|ba|*|bc|))
+                double rangle =
+                    Math.Acos(
+                        ((a.X * c.X) + (a.Y * b.Y)) /
+                        (Vector2.Distance(rawCone[0], rawCone[1]) * Vector2.Distance(rawCone[0], rawCone[2])));
+                //get starting angle
+                Vector2 dv = new Vector2(rawCone[1].X, rawCone[0].Y);
+                Point d = new Point((int) rawCone[1].X, (int) rawCone[0].Y);
+                //d = new a, a = new c, b unchanged duuuh rolf
+                double sangle =
+                    Math.Acos(
+                        ((d.X * a.X) + (d.Y * b.Y)) /
+                        (Vector2.Distance(rawCone[0], dv) * Vector2.Distance(rawCone[0], rawCone[1])));
+
+                //executerino
+                for (float i = (float) sangle; i < rangle; i++)
+                {
+                    float angleRad = Geometry.DegreeToRadian(i);
+                    Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                    Vector3 rotatedPosition =
+                        (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad))).To3D(
+                            );
                     Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
-                    var lineFarm =
+                    MinionManager.FarmLocation lineFarm =
+                        MinionManager.GetBestLineFarmLocation(
+                            minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                            Spell[SpellSlot.E].Range);
+
+                    if (lineFarm.MinionsHit >= minhit)
+                    {
+                        cangles[(int) i] = (int) Math.Round(i);
+                        canglesc++;
+                        hitListLong.Add(lineFarm);
+                        hitListLongPos.Add(lineFarm, rotatedPosition);
+                    }
+                }
+                //2
+                //3
+
+                //4 check all remaining angles
+                for (float i = 0f; i < 360; i ++)
+                {
+                    if ((int) i == (int) sangle)
+                    {
+                        i = i + (float) rangle;
+                    }
+                    float angleRad = Geometry.DegreeToRadian(i);
+                    Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                    Vector3 rotatedPosition =
+                        (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad))).To3D(
+                            );
+                    Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                    MinionManager.FarmLocation lineFarm =
                         MinionManager.GetBestLineFarmLocation(
                             minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
                             Spell[SpellSlot.E].Range);
@@ -201,19 +300,20 @@ namespace Viktor
                     }
                 }
 
+                //---------------------------------------------------------------------------
                 if (hitListShort.Count > 0 &&
                     hitListShort.OrderBy(h => h.MinionsHit).FirstOrDefault().MinionsHit >=
                     hitListLong.OrderBy(h => h.MinionsHit).FirstOrDefault().MinionsHit)
                 {
-                    var pos1 = hitListShort.OrderBy(h => h.MinionsHit).FirstOrDefault();
-                    var pos2 = hitListShortPos[pos1];
+                    MinionManager.FarmLocation pos1 = hitListShort.OrderBy(h => h.MinionsHit).FirstOrDefault();
+                    Vector3 pos2 = hitListShortPos[pos1];
 
                     Spell[SpellSlot.E].Cast(pos2, pos1.Position.To3D());
                 }
                 else if (hitListLong.Count > 0)
                 {
-                    var pos1 = hitListLong.OrderBy(h => h.MinionsHit).FirstOrDefault();
-                    var pos2 = hitListLongPos[pos1];
+                    MinionManager.FarmLocation pos1 = hitListLong.OrderBy(h => h.MinionsHit).FirstOrDefault();
+                    Vector3 pos2 = hitListLongPos[pos1];
 
                     Spell[SpellSlot.E].Cast(pos2, pos1.Position.To3D());
                 }
@@ -223,21 +323,24 @@ namespace Viktor
                 hitListLong.Clear();
                 hitListLongPos.Clear();
             }
-
-
         }
+
         private static void Jungleclear()
         {
-            var minions = MinionManager.GetMinions(
-                Player.ServerPosition, Spell[SpellSlot.E].Range + Spells.ECastRange, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
-            var minionsQ = minions.Where(h => h.IsValidTarget(Spell[SpellSlot.Q].Range)).OrderBy(h => h.MaxHealth);
-            var mana = Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
+            List<Obj_AI_Base> minions = MinionManager.GetMinions(
+                Player.ServerPosition, Spell[SpellSlot.E].Range + Spells.ECastRange, MinionTypes.All, MinionTeam.Neutral,
+                MinionOrderTypes.MaxHealth);
+            IOrderedEnumerable<Obj_AI_Base> minionsQ =
+                minions.Where(h => h.IsValidTarget(Spell[SpellSlot.Q].Range)).OrderBy(h => h.MaxHealth);
+            int mana = Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
 
             if (minions == null || mana > Player.ManaPercent)
+            {
                 return;
+            }
 
-            var useQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.bool").GetValue<bool>();
-            var useE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.bool").GetValue<bool>();
+            bool useQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.bool").GetValue<bool>();
+            bool useE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.bool").GetValue<bool>();
 
             if (useQ && Spell[SpellSlot.Q].IsReady() && minionsQ != null)
             {
@@ -248,50 +351,60 @@ namespace Viktor
             {
                 if (Player.Distance(minions.FirstOrDefault()) < Spells.ECastRange)
                 {
-                    var sourcePosition = minions.FirstOrDefault().ServerPosition;
-                    Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
-                    var lineFarm =
-                        MinionManager.GetBestLineFarmLocation(
-                            minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
-                            Spell[SpellSlot.E].Range);
-                    Spell[SpellSlot.E].Cast(sourcePosition, lineFarm.Position.To3D());
+                    Obj_AI_Base objAiBase = minions.FirstOrDefault();
+                    if (objAiBase != null)
+                    {
+                        Vector3 sourcePosition = objAiBase.ServerPosition;
+                        Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
+                        MinionManager.FarmLocation lineFarm =
+                            MinionManager.GetBestLineFarmLocation(
+                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                Spell[SpellSlot.E].Range);
+                        Spell[SpellSlot.E].Cast(sourcePosition, lineFarm.Position.To3D());
+                    }
                 }
                 else
                 {
-                    var sourcePosition = Player.ServerPosition.Extend(minions.FirstOrDefault().ServerPosition, Spells.ECastRange);
-                    Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
-                    var lineFarm =
-                        MinionManager.GetBestLineFarmLocation(
-                            minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
-                            Spell[SpellSlot.E].Range);
-                    Spell[SpellSlot.E].Cast(sourcePosition, lineFarm.Position.To3D());
+                    Obj_AI_Base objAiBase = minions.FirstOrDefault();
+                    if (objAiBase != null)
+                    {
+                        Vector3 sourcePosition = Player.ServerPosition.Extend(
+                            objAiBase.ServerPosition, Spells.ECastRange);
+                        Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
+                        MinionManager.FarmLocation lineFarm =
+                            MinionManager.GetBestLineFarmLocation(
+                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                Spell[SpellSlot.E].Range);
+                        Spell[SpellSlot.E].Cast(sourcePosition, lineFarm.Position.To3D());
+                    }
                 }
             }
-
-
         }
+
         private static void CastQ(Obj_AI_Base t)
         {
             if (!Spell[SpellSlot.Q].IsReady() || t == null || !Spell[SpellSlot.Q].IsInRange(t))
+            {
                 return;
+            }
             if (Orbwalking.InAutoAttackRange(t))
             {
-                Orbwalking.BeforeAttack += eventArgs =>
-                {
-                    Spell[SpellSlot.Q].CastOnUnit(t, PacketCast); 
-                };
+                Orbwalking.BeforeAttack += eventArgs => { Spell[SpellSlot.Q].CastOnUnit(t, PacketCast); };
             }
             else if (!Config.ViktorConfig.Item("apollo.viktor.combo.q.dont").GetValue<bool>())
             {
                 Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
             }
         }
+
         private static void CastW()
         {
             if (!Spell[SpellSlot.W].IsReady())
+            {
                 return;
+            }
 
-            var stunT =
+            Obj_AI_Hero stunT =
                 HeroManager.Enemies.Where(
                     h =>
                         h.IsValidTarget(Spell[SpellSlot.W].Range) &&
@@ -305,22 +418,22 @@ namespace Viktor
                 Spell[SpellSlot.W].Cast(stunT, PacketCast, true);
             }
 
-            var slowT =
+            Obj_AI_Hero slowT =
                 HeroManager.Enemies.Where(
                     h =>
                         h.IsValidTarget(Spell[SpellSlot.W].Range - Spell[SpellSlot.W].Width) &&
                         h.HasBuffOfType(BuffType.Slow)).OrderBy(h => TargetSelector.GetPriority(h)).FirstOrDefault();
-            var slowTpre = Spell[SpellSlot.W].GetPrediction(slowT, true, -Spell[SpellSlot.E].Width);
+            PredictionOutput slowTpre = Spell[SpellSlot.W].GetPrediction(slowT, true, -Spell[SpellSlot.E].Width);
             if (slowT != null && Config.ViktorConfig.Item("apollo.viktor.combo.w.slow").GetValue<bool>())
             {
                 Spell[SpellSlot.W].Cast(slowTpre.CastPosition, PacketCast);
             }
 
-            var t =
+            Obj_AI_Hero t =
                 HeroManager.Enemies.Where(h => h.IsValidTarget(300))
                     .OrderBy(h => TargetSelector.GetPriority(h))
                     .FirstOrDefault();
-            var tpre = Spell[SpellSlot.E].GetPrediction(t, true);
+            PredictionOutput tpre = Spell[SpellSlot.E].GetPrediction(t, true);
             if (t != null)
             {
                 if (tpre.Hitchance >= HitChance.High)
@@ -334,39 +447,46 @@ namespace Viktor
                 }
             }
         }
+
         private static void CastE(Obj_AI_Base t, HitChance hit)
         {
             if (t == null)
+            {
                 return;
+            }
 
             if (Player.Distance(t.ServerPosition) < Spells.ECastRange && Spell[SpellSlot.E].IsReady())
             {
-                var sourcePosition = t.ServerPosition;
+                Vector3 sourcePosition = t.ServerPosition;
                 Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
-                var preE = Spell[SpellSlot.E].GetPrediction(t, true);
+                PredictionOutput preE = Spell[SpellSlot.E].GetPrediction(t, true);
                 if (preE.Hitchance >= hit)
                 {
                     Spell[SpellSlot.E].Cast(sourcePosition, preE.CastPosition);
                 }
             }
-            else if (Player.Distance(t.ServerPosition) < Spells.ECastRange + Spell[SpellSlot.E].Range && Spell[SpellSlot.E].IsReady())
+            else if (Player.Distance(t.ServerPosition) < Spells.ECastRange + Spell[SpellSlot.E].Range &&
+                     Spell[SpellSlot.E].IsReady())
             {
-                var sourcePosition = Player.ServerPosition.Extend(t.ServerPosition, Spells.ECastRange);
+                Vector3 sourcePosition = Player.ServerPosition.Extend(t.ServerPosition, Spells.ECastRange);
                 Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
-                var preE = Spell[SpellSlot.E].GetPrediction(t, true);
+                PredictionOutput preE = Spell[SpellSlot.E].GetPrediction(t, true);
                 if (preE.Hitchance >= hit)
                 {
                     Spell[SpellSlot.E].Cast(sourcePosition, preE.CastPosition);
                 }
             }
         }
+
         private static void CastR(Obj_AI_Base t)
         {
-            if (t == null || !Spell[SpellSlot.R].IsReady() || ChaosStorm != null)
+            if (t == null || !Spell[SpellSlot.R].IsReady() || _chaosStorm != null)
+            {
                 return;
+            }
 
 
-            var preR = Spell[SpellSlot.R].GetPrediction(t, true);
+            PredictionOutput preR = Spell[SpellSlot.R].GetPrediction(t, true);
             if (t.IsValidTarget(Spell[SpellSlot.R].Range) &&
                 Config.ViktorConfig.Item("apollo.viktor.combo.r.kill").GetValue<bool>() &&
                 Damages.ComboDmg(t) > t.Health &&
@@ -380,20 +500,22 @@ namespace Viktor
                 Spell[SpellSlot.R].Cast(preR.CastPosition, PacketCast);
             }
         }
+
         private static void AutoFollowR()
         {
-            if (ChaosStorm != null)
+            if (_chaosStorm != null)
             {
-                var stormT = TargetSelector.GetTarget(
-                    600, TargetSelector.DamageType.Magical, true, null, ChaosStorm.Position.To2D().To3D());
+                Obj_AI_Hero stormT = TargetSelector.GetTarget(
+                    600, TargetSelector.DamageType.Magical, true, null, _chaosStorm.Position.To2D().To3D());
 
                 Utility.DelayAction.Add(400, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
             }
         }
+
         private static void KillSteal()
         {
-            var useE = Config.ViktorConfig.Item("apollo.viktor.ks.e.bool").GetValue<bool>();
-            var t =
+            bool useE = Config.ViktorConfig.Item("apollo.viktor.ks.e.bool").GetValue<bool>();
+            Obj_AI_Hero t =
                 HeroManager.Enemies.Where(
                     h =>
                         h.IsValidTarget(Spell[SpellSlot.E].Range + Spells.ECastRange) &&
@@ -406,29 +528,30 @@ namespace Viktor
                     .OrderBy(h => h.Health)
                     .FirstOrDefault();
             if (t == null)
+            {
                 return;
+            }
             if (useE && Spell[SpellSlot.E].IsReady())
             {
                 if (Player.Distance(t) < Spells.ECastRange)
                 {
-                    var sourcePosition = t.ServerPosition;
+                    Vector3 sourcePosition = t.ServerPosition;
                     Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
-                    var preE = Spell[SpellSlot.E].GetPrediction(t, true);
+                    PredictionOutput preE = Spell[SpellSlot.E].GetPrediction(t, true);
 
                     Spell[SpellSlot.E].Cast(sourcePosition, preE.CastPosition);
                 }
                 else
                 {
-                    var sourcePosition = Player.ServerPosition.Extend(t.ServerPosition, Spells.ECastRange);
+                    Vector3 sourcePosition = Player.ServerPosition.Extend(t.ServerPosition, Spells.ECastRange);
                     Spell[SpellSlot.E].UpdateSourcePosition(sourcePosition, sourcePosition);
-                    var preE = Spell[SpellSlot.E].GetPrediction(t, true);
+                    PredictionOutput preE = Spell[SpellSlot.E].GetPrediction(t, true);
 
                     Spell[SpellSlot.E].Cast(sourcePosition, preE.CastPosition);
                 }
             }
-
-
         }
+
         private static void OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
             if (Config.ViktorConfig.Item("apollo.viktor.gapcloser.w.bool").GetValue<bool>() &&
@@ -438,12 +561,13 @@ namespace Viktor
                 Spell[SpellSlot.W].Cast(gapcloser.End, PacketCast);
             }
         }
+
         private static void OnInterruptableTarget(Obj_AI_Hero unit, Interrupter2.InterruptableTargetEventArgs args)
         {
             if (args.DangerLevel >= Interrupter2.DangerLevel.High)
             {
-                var useW = Config.ViktorConfig.Item("apollo.viktor.interrupt.w.bool").GetValue<bool>();
-                var useR = Config.ViktorConfig.Item("apollo.viktor.interrupt.r.bool").GetValue<bool>();
+                bool useW = Config.ViktorConfig.Item("apollo.viktor.interrupt.w.bool").GetValue<bool>();
+                bool useR = Config.ViktorConfig.Item("apollo.viktor.interrupt.r.bool").GetValue<bool>();
 
                 if (useW && Spell[SpellSlot.W].IsReady() && unit.IsValidTarget(Spell[SpellSlot.W].Range) &&
                     (Game.Time + 1.5 + Spell[SpellSlot.W].Delay) >= args.EndTime)
@@ -456,24 +580,30 @@ namespace Viktor
                 }
             }
         }
+
         private static void OnCreate(GameObject sender, EventArgs args)
         {
             if (!sender.IsValid)
+            {
                 return;
+            }
 
             if (sender.Name.Contains("Viktor_Base_R_Droid.troy"))
             {
-                ChaosStorm = sender;
+                _chaosStorm = sender;
             }
         }
+
         private static void OnDelete(GameObject sender, EventArgs args)
         {
             if (!sender.IsValid)
+            {
                 return;
+            }
 
             if (sender.Name.Contains("Viktor_Base_R_Droid.troy"))
             {
-                ChaosStorm = null;
+                _chaosStorm = null;
             }
         }
     }

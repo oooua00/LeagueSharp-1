@@ -12,40 +12,46 @@ namespace Viktor
         {
             using (var client = new WebClient())
             {
-                new Thread(async () =>
-                {
-                    try
+                new Thread(
+                    async () =>
                     {
-                        var data = await client.DownloadStringTaskAsync(string.Format("https://raw.github.com/{0}/Properties/AssemblyInfo.cs", path));
-                        foreach (var line in data.Split('\n'))
+                        try
                         {
-                            // Skip comments
-                            if (line.StartsWith("//"))
+                            var data =
+                                await
+                                    client.DownloadStringTaskAsync(
+                                        string.Format("https://raw.github.com/{0}/Properties/AssemblyInfo.cs", path));
+                            foreach (var line in data.Split('\n'))
                             {
-                                continue;
-                            }
-
-                            // Search for AssemblyVersion
-                            if (line.StartsWith("[assembly: AssemblyVersion"))
-                            {
-                                // TODO: Use Regex for this...
-                                var serverVersion = new System.Version(line.Substring(28, (line.Length - 4) - 28 + 1));
-
-                                // Compare both versions
-                                var assemblyName = Assembly.GetExecutingAssembly().GetName();
-                                if (serverVersion > assemblyName.Version)
+                                // Skip comments
+                                if (line.StartsWith("//"))
                                 {
-                                        var msg = assemblyName.Name + " Update available: " + assemblyName.Version + " => "+ serverVersion +"!";
+                                    continue;
+                                }
+
+                                // Search for AssemblyVersion
+                                if (line.StartsWith("[assembly: AssemblyVersion"))
+                                {
+                                    // TODO: Use Regex for this...
+                                    var serverVersion =
+                                        new System.Version(line.Substring(28, (line.Length - 4) - 28 + 1));
+
+                                    // Compare both versions
+                                    var assemblyName = Assembly.GetExecutingAssembly().GetName();
+                                    if (serverVersion > assemblyName.Version)
+                                    {
+                                        var msg = assemblyName.Name + " Update available: " + assemblyName.Version +
+                                                  " => " + serverVersion + "!";
                                         Notifications.AddNotification(msg, 6000, false);
+                                    }
                                 }
                             }
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("An error occured while trying to check for an update:\n{0}", e.Message);
-                    }
-                }).Start();
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("An error occured while trying to check for an update:\n{0}", e.Message);
+                        }
+                    }).Start();
             }
         }
     }

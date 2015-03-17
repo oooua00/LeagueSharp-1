@@ -9,6 +9,7 @@ namespace Viktor
         public static Menu ViktorConfig;
         public static Menu TargetSelectorMenu;
         public static Orbwalking.Orbwalker Orbwalker;
+
         public static void Init()
         {
             ViktorConfig = new Menu("Apollo's " + ObjectManager.Player.ChampionName, "apollo.viktor", true);
@@ -39,7 +40,9 @@ namespace Viktor
 
                 var e = new Menu("E", "apollo.viktor.combo.e");
                 e.AddItem(new MenuItem("apollo.viktor.combo.e.bool", "Use in Combo").SetValue(true));
-                e.AddItem(new MenuItem("apollo.viktor.combo.e.pre", "E HitChance").SetValue(new StringList((new[] { "Low", "Medium", "High", "Very High" }), 2)));
+                e.AddItem(
+                    new MenuItem("apollo.viktor.combo.e.pre", "E HitChance").SetValue(
+                        new StringList((new[] { "Low", "Medium", "High", "Very High" }), 2)));
                 combo.AddSubMenu(e);
 
                 var r = new Menu("R", "apollo.viktor.combo.r");
@@ -47,8 +50,7 @@ namespace Viktor
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.kill", "Use if enemy is killable").SetValue(true));
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.hit", "Use if min hit").SetValue(new Slider(3, 1, 5)));
                 r.AddItem(
-                    new MenuItem("apollo.viktor.combo.r.minhp", "Dont ult if target has hp%").SetValue(
-                        new Slider(10)));
+                    new MenuItem("apollo.viktor.combo.r.minhp", "Dont ult if target has hp%").SetValue(new Slider(10)));
                 combo.AddSubMenu(r);
 
                 combo.AddItem(new MenuItem("apollo.viktor.combo.ignite.bool", "Use Ignite").SetValue(true));
@@ -65,7 +67,9 @@ namespace Viktor
 
                 var e = new Menu("E", "apollo.viktor.harass.e");
                 e.AddItem(new MenuItem("apollo.viktor.harass.e.bool", "Use in Harass").SetValue(true));
-                e.AddItem(new MenuItem("apollo.viktor.harass.e.pre", "E HitChance").SetValue(new StringList((new[] { "Low", "Medium", "High", "Very High" }), 3)));
+                e.AddItem(
+                    new MenuItem("apollo.viktor.harass.e.pre", "E HitChance").SetValue(
+                        new StringList((new[] { "Low", "Medium", "High", "Very High" }), 3)));
                 harass.AddSubMenu(e);
 
                 harass.AddItem(
@@ -133,8 +137,7 @@ namespace Viktor
                     new MenuItem("apollo.viktor.draw.r", "Draw R Range").SetValue(new Circle(true, Color.AntiqueWhite)));
                 draw.AddItem(
                     new MenuItem("apollo.viktor.draw.cd", "Draw on CD").SetValue(new Circle(false, Color.DarkRed)));
-                draw.AddItem(
-                    new MenuItem("apollo.viktor.draw.ind.bool", "Draw Combo Damage", true).SetValue(true));
+                draw.AddItem(new MenuItem("apollo.viktor.draw.ind.bool", "Draw Combo Damage", true).SetValue(true));
                 draw.AddItem(
                     new MenuItem("apollo.viktor.draw.ind.fill", "Draw Combo Damage Fill", true).SetValue(
                         new Circle(true, Color.FromArgb(90, 255, 169, 4))));

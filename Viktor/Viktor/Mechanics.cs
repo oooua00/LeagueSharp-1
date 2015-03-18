@@ -155,10 +155,10 @@ namespace Viktor
                     minions.Where(
                         h =>
                             HealthPrediction.GetHealthPrediction(
-                                h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                                h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                                 (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) < Damages.Dmg.Q(h) &&
                             HealthPrediction.GetHealthPrediction(
-                                h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                                h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                                 (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
                         .OrderBy(h => h.Health)
                         .FirstOrDefault();
@@ -172,10 +172,10 @@ namespace Viktor
                         h =>
                             h.BaseSkinName.Contains("Siege") &&
                             HealthPrediction.GetHealthPrediction(
-                                h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                                h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                                 (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) < Damages.Dmg.Q(h) &&
                             HealthPrediction.GetHealthPrediction(
-                                h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                                h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                                 (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
                         .OrderBy(h => h.Health)
                         .FirstOrDefault();
@@ -572,8 +572,8 @@ namespace Viktor
             {
                 Obj_AI_Hero stormT = TargetSelector.GetTarget(
                     600, TargetSelector.DamageType.Magical, true, null, _chaosStorm.Position.To2D().To3D());
-
-                Utility.DelayAction.Add(400, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
+                if (stormT != null)
+                    Utility.DelayAction.Add(400, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
             }
         }
 
@@ -582,14 +582,7 @@ namespace Viktor
             bool useE = Config.ViktorConfig.Item("apollo.viktor.ks.e.bool").GetValue<bool>();
             Obj_AI_Hero t =
                 HeroManager.Enemies.Where(
-                    h =>
-                        h.IsValidTarget(Spell[SpellSlot.E].Range + Spells.ECastRange) &&
-                        HealthPrediction.GetHealthPrediction(
-                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
-                            (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) < Damages.Dmg.Q(h) &&
-                        HealthPrediction.GetHealthPrediction(
-                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
-                            (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
+                    h => h.Health + 15 < Player.CalcDamage(h, Damage.DamageType.Magical, Damages.Dmg.E(h)))
                     .OrderBy(h => h.Health)
                     .FirstOrDefault();
             if (t == null)

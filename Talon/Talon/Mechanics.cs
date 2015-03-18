@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 
 namespace Talon
 {
@@ -57,7 +58,7 @@ namespace Talon
         {
             var t = GetTarget(Spell[SpellSlot.W].Range);
 
-            if (!t.IsValidTarget())
+            if (t == null)
                 return;
 
             if (IgniteSlot != SpellSlot.Unknown && IgniteSlot.IsReady() &&
@@ -113,7 +114,7 @@ namespace Talon
             var t = TargetSelector.GetTarget(Player, Spell[SpellSlot.W].Range, TargetSelector.DamageType.Physical);
             var mana = Player.ManaPercent > Config.TalonConfig.Item("apollo.talon.harass.mana").GetValue<Slider>().Value;
 
-            if (!t.IsValidTarget() || !mana)
+            if (t == null || !mana)
                 return;
 
             if (Spell[SpellSlot.Q].IsReady() && Helper.Use.Q(Orbwalking.OrbwalkingMode.Mixed))
@@ -138,18 +139,18 @@ namespace Talon
         private static void Killsteal()
         {
             var t =
-                HeroManager.Enemies.Where(h => h.IsValidTarget(Spell[SpellSlot.W].Range))
+                HeroManager.Enemies.Where(
+                    h =>
+                        h.IsValidTarget(Spell[SpellSlot.W].Range) &&
+                        h.Health + 15 < Player.CalcDamage(h, Damage.DamageType.Physical, Damages.Dmg.W(h)))
                     .OrderBy(h => h.Health)
                     .FirstOrDefault();
 
-            if (!t.IsValidTarget())
+            if (t == null)
                 return;
 
-            if (Helper.GetHealthPrediction.From(t, Player, SpellSlot.W, Damages.Dmg.W(t), true) &&
-                Helper.GetHealthPrediction.From(t, Player, SpellSlot.W, 0f, false))
-            {
-                Spell[SpellSlot.W].CastIfHitchanceEquals(t, HitChance.High, PacketCast);
-            }
+
+            Spell[SpellSlot.W].CastIfHitchanceEquals(t, HitChance.High, PacketCast);
         }
         private static void Laneclear()
         {
@@ -212,7 +213,7 @@ namespace Talon
                             enemy.Team != ObjectManager.Player.Team && !enemy.IsDead && enemy.IsVisible &&
                             Config.TalonConfig.Item("Assassin" + enemy.ChampionName) != null &&
                             Config.TalonConfig.Item("Assassin" + enemy.ChampionName).GetValue<bool>() &&
-                            ObjectManager.Player.Distance(enemy) < assassinRange);
+                            Vector3.Distance(Player.ServerPosition, enemy.ServerPosition) < assassinRange);
 
             if (Config.TalonConfig.Item("AssassinSelectOption").GetValue<StringList>().SelectedIndex == 1)
             {

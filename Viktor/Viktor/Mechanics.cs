@@ -136,6 +136,7 @@ namespace Viktor
             bool useE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.bool").GetValue<bool>();
             bool lastHitQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.lasthit").GetValue<bool>();
             bool lastHitCanonQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.canon").GetValue<bool>();
+            bool toasterProofE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.ToasterProofE").GetValue<bool>();
 
             if (mana < Player.ManaPercent)
             {
@@ -217,90 +218,151 @@ namespace Viktor
                     }
                 }
 
-                //0 create checked angle array
-                double[] cangles = new double[0x168];
-                int canglesc = 0;
 
-                //1
-                Vector2 playDirFace = Player.Direction.To2D();
-                //gen raw vectors to create cone
-                Vector2[] rawCone = new Vector2[0x3]
+                if (toasterProofE)
                 {
-                    playDirFace, new Vector2(playDirFace.X - 425, playDirFace.Y + 1275),
-                    new Vector2(playDirFace.X + 425, playDirFace.Y + 1275)
-                };
-                //convert raw cone to points (I just use this to keep my code readable could just as well use Vector2.X and Vector2.Y)
-                Point a = new Point((int) rawCone[1].X, (int) rawCone[1].Y);
-                Point b = new Point((int) rawCone[0].X, (int) rawCone[0].Y);
-                Point c = new Point((int) rawCone[2].X, (int) rawCone[2].Y);
-                //using dot product to find the angle, dot product: math is fun boyz
-                //a.b = (|ba|*|bc|)*cos(α)
-                //a.b = ax*bx+ay*by = |ba|*|bc|*cos(α)
-                //α = acos((ax*bx+ay*by)/(|ba|*|bc|))
-                double rangle =
-                    Math.Acos(
-                        ((a.X * c.X) + (a.Y * b.Y)) /
-                        (Vector2.Distance(rawCone[0], rawCone[1]) * Vector2.Distance(rawCone[0], rawCone[2])));
-                //get starting angle
-                Vector2 dv = new Vector2(rawCone[1].X, rawCone[0].Y);
-                Point d = new Point((int) rawCone[1].X, (int) rawCone[0].Y);
-                //d = new a, a = new c, b unchanged duuuh rolf
-                double sangle =
-                    Math.Acos(
-                        ((d.X * a.X) + (d.Y * b.Y)) /
-                        (Vector2.Distance(rawCone[0], dv) * Vector2.Distance(rawCone[0], rawCone[1])));
 
-                //executerino
-                for (float i = (float) sangle; i < rangle; i++)
-                {
-                    float angleRad = Geometry.DegreeToRadian(i);
-                    Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
-                    Vector3 rotatedPosition =
-                        (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad))).To3D(
-                            );
-                    Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
-                    MinionManager.FarmLocation lineFarm =
-                        MinionManager.GetBestLineFarmLocation(
-                            minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
-                            Spell[SpellSlot.E].Range);
+                    //0 create checked angle array
+                    double[] cangles = new double[0x168];
 
-                    if (lineFarm.MinionsHit >= minhit)
+                    //1
+                    Vector2 playDirFace = Player.Direction.To2D();
+                    //gen raw vectors to create cone
+                    Vector2[] rawCone = {
+                        playDirFace, new Vector2(playDirFace.X - 425, playDirFace.Y + 1275),
+                        new Vector2(playDirFace.X + 425, playDirFace.Y + 1275)
+                    };
+                    //convert raw cone to points (I just use this to keep my code readable could just as well use Vector2.X and Vector2.Y)
+                    Point a = new Point((int) rawCone[1].X, (int) rawCone[1].Y);
+                    Point b = new Point((int) rawCone[0].X, (int) rawCone[0].Y);
+                    Point c = new Point((int) rawCone[2].X, (int) rawCone[2].Y);
+                    //using dot product to find the angle, dot product: math is fun boyz
+                    //a.b = (|ba|*|bc|)*cos(α)
+                    //a.b = ax*bx+ay*by = |ba|*|bc|*cos(α)
+                    //α = acos((ax*bx+ay*by)/(|ba|*|bc|))
+                    double rangle =
+                        Math.Acos(
+                            ((a.X * c.X) + (a.Y * b.Y)) /
+                            (Vector2.Distance(rawCone[0], rawCone[1]) * Vector2.Distance(rawCone[0], rawCone[2])));
+                    //get starting angle
+                    Vector2 dv = new Vector2(rawCone[1].X, rawCone[0].Y);
+                    Point d = new Point((int) rawCone[1].X, (int) rawCone[0].Y);
+                    //d = new a, a = new c, b unchanged duuuh rolf
+                    double sangle =
+                        Math.Acos(
+                            ((d.X * a.X) + (d.Y * b.Y)) /
+                            (Vector2.Distance(rawCone[0], dv) * Vector2.Distance(rawCone[0], rawCone[1])));
+
+                    //executerino
+                    for (float i = (float) sangle; i < rangle; i++)
                     {
-                        cangles[(int) i] = (int) Math.Round(i);
-                        canglesc++;
-                        hitListLong.Add(lineFarm);
-                        hitListLongPos.Add(lineFarm, rotatedPosition);
+                        float angleRad = Geometry.DegreeToRadian(i);
+                        Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                        Vector3 rotatedPosition =
+                            (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
+                                .To3D();
+                        Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                        MinionManager.FarmLocation lineFarm =
+                            MinionManager.GetBestLineFarmLocation(
+                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                Spell[SpellSlot.E].Range);
+
+                        if (lineFarm.MinionsHit >= minhit)
+                        {
+                            cangles[(int) i] = (int) Math.Round(i);
+                            hitListLong.Add(lineFarm);
+                            hitListLongPos.Add(lineFarm, rotatedPosition);
+                        }
+                    }
+                    //2 check subset of remaining angles
+                    double rangle2 = (360 - (rangle * 2)) / 2;
+                    //2.1 check left sector
+                    for (float i = (float) sangle; i < rangle2; i--)
+                    {
+                        float angleRad = Geometry.DegreeToRadian(i);
+                        Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                        Vector3 rotatedPosition =
+                            (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
+                                .To3D();
+                        Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                        MinionManager.FarmLocation lineFarm =
+                            MinionManager.GetBestLineFarmLocation(
+                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                Spell[SpellSlot.E].Range);
+
+                        if (lineFarm.MinionsHit >= minhit)
+                        {
+                            cangles[(int) i] = (int) Math.Round(i);
+                            hitListLong.Add(lineFarm);
+                            hitListLongPos.Add(lineFarm, rotatedPosition);
+                        }
+                    }
+                    //3 check right sector
+                    for (float i = (float)sangle+(float)rangle; i < rangle2; i++)
+                    {
+                        float angleRad = Geometry.DegreeToRadian(i);
+                        Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                        Vector3 rotatedPosition =
+                            (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
+                                .To3D();
+                        Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                        MinionManager.FarmLocation lineFarm =
+                            MinionManager.GetBestLineFarmLocation(
+                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                Spell[SpellSlot.E].Range);
+
+                        if (lineFarm.MinionsHit >= minhit)
+                        {
+                            cangles[(int)i] = (int)Math.Round(i);
+                            hitListLong.Add(lineFarm);
+                            hitListLongPos.Add(lineFarm, rotatedPosition);
+                        }
+                    }
+                    //4 check lower sector
+                    for (float i = (float)sangle + (float)rangle + (float)rangle2; i < rangle2; i++)
+                    {
+                        float angleRad = Geometry.DegreeToRadian(i);
+                        Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                        Vector3 rotatedPosition =
+                            (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
+                                .To3D();
+                        Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                        MinionManager.FarmLocation lineFarm =
+                            MinionManager.GetBestLineFarmLocation(
+                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                Spell[SpellSlot.E].Range);
+
+                        if (lineFarm.MinionsHit >= minhit)
+                        {
+                            cangles[(int)i] = (int)Math.Round(i);
+                            hitListLong.Add(lineFarm);
+                            hitListLongPos.Add(lineFarm, rotatedPosition);
+                        }
                     }
                 }
-                //2
-                //3
-
-                //4 check all remaining angles
-                for (float i = 0f; i < 360; i ++)
+                else
                 {
-                    if ((int) i == (int) sangle)
+                    for (float i = 0f; i < 360; i++)
                     {
-                        i = i + (float) rangle;
-                    }
-                    float angleRad = Geometry.DegreeToRadian(i);
-                    Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
-                    Vector3 rotatedPosition =
-                        (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad))).To3D(
-                            );
-                    Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
-                    MinionManager.FarmLocation lineFarm =
-                        MinionManager.GetBestLineFarmLocation(
-                            minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
-                            Spell[SpellSlot.E].Range);
+                        float angleRad = Geometry.DegreeToRadian(i);
+                        Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                        Vector3 rotatedPosition =
+                            (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad))).To3D(
+                                );
+                        Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                        MinionManager.FarmLocation lineFarm =
+                            MinionManager.GetBestLineFarmLocation(
+                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                Spell[SpellSlot.E].Range);
 
-                    if (lineFarm.MinionsHit >= minhit)
-                    {
-                        hitListLong.Add(lineFarm);
-                        hitListLongPos.Add(lineFarm, rotatedPosition);
+                        if (lineFarm.MinionsHit >= minhit)
+                        {
+                            hitListLong.Add(lineFarm);
+                            hitListLongPos.Add(lineFarm, rotatedPosition);
+                        }
                     }
                 }
 
-                //---------------------------------------------------------------------------
                 if (hitListShort.Count > 0 &&
                     hitListShort.OrderBy(h => h.MinionsHit).FirstOrDefault().MinionsHit >=
                     hitListLong.OrderBy(h => h.MinionsHit).FirstOrDefault().MinionsHit)

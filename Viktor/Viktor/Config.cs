@@ -94,6 +94,9 @@ namespace Viktor
                 e.AddItem(
                     new MenuItem("apollo.viktor.laneclear.e.hit", "Use if min hit").SetValue(new Slider(3, 1, 10)));
                 laneclear.AddSubMenu(e);
+                e.AddItem(
+                    new MenuItem("apollo.viktor.laneclear.e.ToasterProofE", "Use toaster proof e").SetValue(true));
+                laneclear.AddSubMenu(e);
 
                 laneclear.AddItem(new MenuItem("apollo.viktor.laneclear.mana", "Min Mana%").SetValue(new Slider(30)));
 

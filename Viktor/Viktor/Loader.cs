@@ -22,7 +22,9 @@ namespace Viktor
                 CustomEvents.Game.OnGameLoad += eventArgs =>
                 {
                     if (ObjectManager.Player.ChampionName != "Viktor")
+                    {
                         return;
+                    }
 
                     Spells.Init();
                     Config.Init();

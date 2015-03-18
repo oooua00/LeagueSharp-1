@@ -8,12 +8,19 @@ namespace Viktor
     {
         private static readonly Obj_AI_Hero Player = ObjectManager.Player;
         private static readonly Dictionary<SpellSlot, Spell> Spell = Spells.Spell;
+
         public static class Dmg
         {
-            static readonly int[] QDmg = { 40, 60, 80, 100, 120 };
-            static readonly int[] EDmg = { 70, 115, 160, 205, 250 };
-            static readonly int[] RDmg = { 360, 670, 980 };
-            static readonly int[] QaaDmg = { 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 110, 130, 150, 170, 190, 210 };
+            private static readonly int[] QDmg = { 40, 60, 80, 100, 120 };
+            private static readonly int[] EDmg = { 70, 115, 160, 205, 250 };
+            private static readonly int[] RDmg = { 360, 670, 980 };
+
+            private static readonly int[] QaaDmg =
+            {
+                20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 110, 130, 150, 170,
+                190, 210
+            };
+
             public static float Q(Obj_AI_Base enemy)
             {
                 return
@@ -40,7 +47,7 @@ namespace Viktor
                     ((float)
                         Player.CalcDamage(
                             enemy, Damage.DamageType.Magical,
-                            EDmg[Spell[SpellSlot.E].Level] + (Player.TotalMagicalDamage * .7))) * (float)addDmg;
+                            EDmg[Spell[SpellSlot.E].Level] + (Player.TotalMagicalDamage * .7))) * (float) addDmg;
             }
 
             public static float R(Obj_AI_Base enemy)
@@ -52,12 +59,13 @@ namespace Viktor
                             RDmg[Spell[SpellSlot.R].Level] + (Player.TotalMagicalDamage * 1.95));
             }
         }
+
         public static class ManaCost
         {
-            static readonly int[] QMana = { 45, 45, 50, 55, 60, 65 };
-            static readonly int[] WMana = { 65, 65, 65, 65, 65, 65 };
-            static readonly int[] EMana = { 70, 70, 80, 90, 100, 110 };
-            static readonly int[] RMana = { 100, 100, 100, 100 };
+            private static readonly int[] QMana = { 45, 45, 50, 55, 60, 65 };
+            private static readonly int[] WMana = { 65, 65, 65, 65, 65, 65 };
+            private static readonly int[] EMana = { 70, 70, 80, 90, 100, 110 };
+            private static readonly int[] RMana = { 100, 100, 100, 100 };
 
             public static float Q
             {
@@ -106,7 +114,7 @@ namespace Viktor
                 dmg += Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
             }
 
-            return (float)dmg;
+            return (float) dmg;
         }
     }
 }

@@ -221,11 +221,7 @@ namespace Viktor
 
                 if (toasterProofE)
                 {
-
-                    //0 create checked angle array
-                    double[] cangles = new double[0x168];
-
-                    //1
+                    bool ex = false;
                     Vector2 playDirFace = Player.Direction.To2D();
                     //gen raw vectors to create cone
                     Vector2[] rawCone = {
@@ -269,76 +265,83 @@ namespace Viktor
 
                         if (lineFarm.MinionsHit >= minhit)
                         {
-                            cangles[(int) i] = (int) Math.Round(i);
+                            ex = true;
                             hitListLong.Add(lineFarm);
                             hitListLongPos.Add(lineFarm, rotatedPosition);
                         }
                     }
-                    //2 check subset of remaining angles
-                    double rangle2 = (360 - (rangle * 2)) / 2;
-                    //2.1 check left sector
-                    for (float i = (float) sangle; i < rangle2; i--)
+                    if (!ex)
                     {
-                        float angleRad = Geometry.DegreeToRadian(i);
-                        Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
-                        Vector3 rotatedPosition =
-                            (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
-                                .To3D();
-                        Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
-                        MinionManager.FarmLocation lineFarm =
-                            MinionManager.GetBestLineFarmLocation(
-                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
-                                Spell[SpellSlot.E].Range);
-
-                        if (lineFarm.MinionsHit >= minhit)
+                        double rangle2 = (360 - (rangle * 2)) / 2;
+                        //2.1 check left sector
+                        for (float i = (float)sangle; i < rangle2; i--)
                         {
-                            cangles[(int) i] = (int) Math.Round(i);
-                            hitListLong.Add(lineFarm);
-                            hitListLongPos.Add(lineFarm, rotatedPosition);
+                            float angleRad = Geometry.DegreeToRadian(i);
+                            Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                            Vector3 rotatedPosition =
+                                (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
+                                    .To3D();
+                            Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                            MinionManager.FarmLocation lineFarm =
+                                MinionManager.GetBestLineFarmLocation(
+                                    minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                    Spell[SpellSlot.E].Range);
+
+                            if (lineFarm.MinionsHit >= minhit)
+                            {
+                                ex = true;
+                                hitListLong.Add(lineFarm);
+                                hitListLongPos.Add(lineFarm, rotatedPosition);
+                            }
+                        }
+                        if (!ex)
+                        {
+                            //3 check right sector
+                            for (float i = (float)sangle + (float)rangle; i < rangle2; i++)
+                            {
+                                float angleRad = Geometry.DegreeToRadian(i);
+                                Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                                Vector3 rotatedPosition =
+                                    (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
+                                        .To3D();
+                                Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                                MinionManager.FarmLocation lineFarm =
+                                    MinionManager.GetBestLineFarmLocation(
+                                        minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                        Spell[SpellSlot.E].Range);
+
+                                if (lineFarm.MinionsHit >= minhit)
+                                {
+                                    hitListLong.Add(lineFarm);
+                                    hitListLongPos.Add(lineFarm, rotatedPosition);
+                                }
+                            }
+                            if (!ex)
+                            {
+                                //4 check lower sector
+                                for (float i = (float)sangle + (float)rangle + (float)rangle2; i < rangle2; i++)
+                                {
+                                    float angleRad = Geometry.DegreeToRadian(i);
+                                    Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
+                                    Vector3 rotatedPosition =
+                                        (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
+                                            .To3D();
+                                    Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
+                                    MinionManager.FarmLocation lineFarm =
+                                        MinionManager.GetBestLineFarmLocation(
+                                            minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
+                                            Spell[SpellSlot.E].Range);
+
+                                    if (lineFarm.MinionsHit >= minhit)
+                                    {
+                                        hitListLong.Add(lineFarm);
+                                        hitListLongPos.Add(lineFarm, rotatedPosition);
+                                    }
+                                }
+                            }
                         }
                     }
-                    //3 check right sector
-                    for (float i = (float)sangle+(float)rangle; i < rangle2; i++)
-                    {
-                        float angleRad = Geometry.DegreeToRadian(i);
-                        Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
-                        Vector3 rotatedPosition =
-                            (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
-                                .To3D();
-                        Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
-                        MinionManager.FarmLocation lineFarm =
-                            MinionManager.GetBestLineFarmLocation(
-                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
-                                Spell[SpellSlot.E].Range);
-
-                        if (lineFarm.MinionsHit >= minhit)
-                        {
-                            cangles[(int)i] = (int)Math.Round(i);
-                            hitListLong.Add(lineFarm);
-                            hitListLongPos.Add(lineFarm, rotatedPosition);
-                        }
-                    }
-                    //4 check lower sector
-                    for (float i = (float)sangle + (float)rangle + (float)rangle2; i < rangle2; i++)
-                    {
-                        float angleRad = Geometry.DegreeToRadian(i);
-                        Vector2 direction = ObjectManager.Player.Direction.To2D().Perpendicular();
-                        Vector3 rotatedPosition =
-                            (ObjectManager.Player.Position.To2D() + (Spells.ECastRange * direction.Rotated(angleRad)))
-                                .To3D();
-                        Spell[SpellSlot.E].UpdateSourcePosition(rotatedPosition, rotatedPosition);
-                        MinionManager.FarmLocation lineFarm =
-                            MinionManager.GetBestLineFarmLocation(
-                                minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.E].Width,
-                                Spell[SpellSlot.E].Range);
-
-                        if (lineFarm.MinionsHit >= minhit)
-                        {
-                            cangles[(int)i] = (int)Math.Round(i);
-                            hitListLong.Add(lineFarm);
-                            hitListLongPos.Add(lineFarm, rotatedPosition);
-                        }
-                    }
+                    
                 }
                 else
                 {

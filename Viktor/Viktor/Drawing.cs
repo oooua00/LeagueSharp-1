@@ -13,13 +13,7 @@ namespace Viktor
 
         public static void Init()
         {
-            DamageInd();
             LeagueSharp.Drawing.OnDraw += OnDraw;
-        }
-
-        private static void DamageInd()
-        {
-            DamageIndicator.DamageToUnit = Damages.ComboDmg;
         }
 
         private static void OnDraw(EventArgs args)
@@ -59,8 +53,8 @@ namespace Viktor
             {
                 Render.Circle.DrawCircle(Player.Position, Spell[SpellSlot.R].Range, cdR ? drawCd.Color : drawR.Color);
             }
-            /*if (Mechanics.ChaosStorm != null)
-                Render.Circle.DrawCircle(Mechanics.ChaosStorm.Position.To2D().To3D(), 0, Color.Red, (int)Spell[SpellSlot.R].Width);*/
+            if (Mechanics.ChaosStorm != null)
+                Render.Circle.DrawCircle(Mechanics.ChaosStorm.Position.To2D().To3D(), 0, Color.Red, (int)Spell[SpellSlot.R].Width);
         }
     }
 }

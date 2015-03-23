@@ -90,31 +90,32 @@ namespace Viktor
 
         public static float ComboDmg(Obj_AI_Base enemy)
         {
-            var dmg = 0d;
-            var mana = Player.Mana;
-            var usedMana = 0f;
+            var damage = 0d;
 
-            if (Spell[SpellSlot.Q].IsReady() && mana >= usedMana + ManaCost.Q)
+            if (Spell[SpellSlot.Q].IsReady())
+                damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+
+            if (Spell[SpellSlot.E].IsReady())
+                damage += Player.GetSpellDamage(enemy, SpellSlot.E);
+
+            if (Spell[SpellSlot.R].IsReady())
             {
-                dmg += Dmg.Q(enemy);
-                dmg += Dmg.Qaa(enemy);
-                usedMana += ManaCost.Q;
-            }
-            if (Spell[SpellSlot.E].IsReady() && mana >= usedMana + ManaCost.E)
-            {
-                dmg += Dmg.E(enemy);
-                usedMana += ManaCost.E;
-            }
-            if (Spell[SpellSlot.R].IsReady() && mana >= usedMana + ManaCost.R)
-            {
-                dmg += Dmg.R(enemy);
-            }
-            if (Mechanics.IgniteSlot != SpellSlot.Unknown && Mechanics.IgniteSlot.IsReady())
-            {
-                dmg += Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
+                damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                damage += 5 * Player.GetSpellDamage(enemy, SpellSlot.R, 1);
             }
 
-            return (float) dmg;
+            if (Mechanics.ChaosStorm != null)
+            {
+                damage += Player.GetSpellDamage(enemy, SpellSlot.R, 1);
+            }
+
+            if (Mechanics.IgniteSlot != SpellSlot.Unknown &&
+                Player.Spellbook.CanUseSpell(Mechanics.IgniteSlot) == SpellState.Ready)
+            {
+                damage += ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
+            }
+
+            return (float)damage;
         }
     }
 }

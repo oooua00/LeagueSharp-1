@@ -48,9 +48,10 @@ namespace Viktor
                 var r = new Menu("R", "apollo.viktor.combo.r");
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.bool", "Use in Combo").SetValue(true));
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.kill", "Use if enemy is killable").SetValue(true));
-                r.AddItem(new MenuItem("apollo.viktor.combo.r.hit", "Use if min hit").SetValue(new Slider(3, 1, 5)));
                 r.AddItem(
-                    new MenuItem("apollo.viktor.combo.r.minhp", "Dont ult if target has hp%").SetValue(new Slider(10)));
+                    new MenuItem("apollo.viktor.combo.r.minhp", "Dont ult if target has hp%").SetValue(new Slider(5)));
+                r.AddItem(new MenuItem("apollo.viktor.combo.r.hit", "Use if min hit").SetValue(new Slider(3, 1, 5)));
+
                 combo.AddSubMenu(r);
 
                 combo.AddItem(new MenuItem("apollo.viktor.combo.ignite.bool", "Use Ignite").SetValue(true));
@@ -93,7 +94,6 @@ namespace Viktor
                 e.AddItem(new MenuItem("apollo.viktor.laneclear.e.bool", "Use in Laneclear").SetValue(true));
                 e.AddItem(
                     new MenuItem("apollo.viktor.laneclear.e.hit", "Use if min hit").SetValue(new Slider(3, 1, 10)));
-                laneclear.AddSubMenu(e);
                 e.AddItem(
                     new MenuItem("apollo.viktor.laneclear.e.ToasterProofE", "Use toaster proof e").SetValue(true));
                 laneclear.AddSubMenu(e);
@@ -140,10 +140,25 @@ namespace Viktor
                     new MenuItem("apollo.viktor.draw.r", "Draw R Range").SetValue(new Circle(true, Color.AntiqueWhite)));
                 draw.AddItem(
                     new MenuItem("apollo.viktor.draw.cd", "Draw on CD").SetValue(new Circle(false, Color.DarkRed)));
-                draw.AddItem(new MenuItem("apollo.viktor.draw.ind.bool", "Draw Combo Damage", true).SetValue(true));
-                draw.AddItem(
-                    new MenuItem("apollo.viktor.draw.ind.fill", "Draw Combo Damage Fill", true).SetValue(
-                        new Circle(true, Color.FromArgb(90, 255, 169, 4))));
+                MenuItem drawComboDamageMenu = new MenuItem("apollo.viktor.draw.ind.bool", "Draw Combo Damage", true).SetValue(true);
+                MenuItem drawFill = new MenuItem("apollo.viktor.draw.ind.fill", "Draw Combo Damage Fill", true).SetValue(new Circle(true, Color.FromArgb(90, 255, 169, 4)));
+                draw.AddItem(drawComboDamageMenu);
+                draw.AddItem(drawFill);
+                DamageIndicator.DamageToUnit = Damages.ComboDmg;
+                DamageIndicator.Enabled = drawComboDamageMenu.GetValue<bool>();
+                DamageIndicator.Fill = drawFill.GetValue<Circle>().Active;
+                DamageIndicator.FillColor = drawFill.GetValue<Circle>().Color;
+                drawComboDamageMenu.ValueChanged +=
+                    delegate(object sender, OnValueChangeEventArgs eventArgs)
+                    {
+                        DamageIndicator.Enabled = eventArgs.GetNewValue<bool>();
+                    };
+                drawFill.ValueChanged +=
+                    delegate(object sender, OnValueChangeEventArgs eventArgs)
+                    {
+                        DamageIndicator.Fill = eventArgs.GetNewValue<Circle>().Active;
+                        DamageIndicator.FillColor = eventArgs.GetNewValue<Circle>().Color;
+                    };
 
                 ViktorConfig.AddSubMenu(draw);
             }

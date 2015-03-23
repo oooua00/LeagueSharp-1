@@ -25,13 +25,14 @@ namespace Viktor
                     {
                         return;
                     }
-
+                    Utils.ClearConsole();
                     Spells.Init();
                     Config.Init();
                     Drawing.Init();
+                    Utility.HpBarDamageIndicator.DamageToUnit = Damages.ComboDmg;
+                    Utility.HpBarDamageIndicator.Enabled = true;
                     Mechanics.Init();
-                    UpdateChecker.Initialize("Apollo16/LeagueSharp/tree/master/Viktor");
-                    Notifications.AddNotification("Apollo's " + ObjectManager.Player.ChampionName + " Loaded", 5000);
+                    Notifications.AddNotification("Apollo's " + ObjectManager.Player.ChampionName + " Loaded", 5000, false);
                 };
             }
         }

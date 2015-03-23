@@ -257,7 +257,7 @@ namespace Viktor
             }
             if (Orbwalking.InAutoAttackRange(t))
             {
-                Orbwalking.BeforeAttack += eventArgs => { Spell[SpellSlot.Q].CastOnUnit(t, PacketCast); };
+                Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
             }
             else if (!Config.ViktorConfig.Item("apollo.viktor.combo.q.dont").GetValue<bool>())
             {

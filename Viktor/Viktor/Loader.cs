@@ -26,6 +26,7 @@ namespace Viktor
                         return;
                     }
                     Utils.ClearConsole();
+                    Updater.Init("Apollo16/LeagueSharp/master/Viktor/Viktor");
                     Spells.Init();
                     Config.Init();
                     Drawing.Init();

@@ -207,14 +207,8 @@ namespace Viktor
             {
                 return;
             }
-            if (Orbwalking.InAutoAttackRange(t))
-            {
-                Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
-            }
-            else if (!Config.ViktorConfig.Item("apollo.viktor.combo.q.dont").GetValue<bool>())
-            {
-                Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
-            }
+
+            Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
         }
 
         private static void CastW()
@@ -448,11 +442,11 @@ namespace Viktor
                 minions.Where(
                     h =>
                         HealthPrediction.GetHealthPrediction(
-                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                             (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) <
                         Player.GetSpellDamage(h, SpellSlot.Q) &&
                         HealthPrediction.GetHealthPrediction(
-                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                             (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
                     .OrderBy(h => h.Health)
                     .FirstOrDefault();
@@ -466,11 +460,11 @@ namespace Viktor
                     h =>
                         h.BaseSkinName.Contains("Siege") &&
                         HealthPrediction.GetHealthPrediction(
-                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                             (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) <
                         Player.GetSpellDamage(h, SpellSlot.Q) &&
                         HealthPrediction.GetHealthPrediction(
-                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
                             (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
                     .OrderBy(h => h.Health)
                     .FirstOrDefault();

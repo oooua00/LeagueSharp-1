@@ -30,7 +30,6 @@ namespace Viktor
             {
                 var q = new Menu("Q", "apollo.viktor.combo.q");
                 q.AddItem(new MenuItem("apollo.viktor.combo.q.bool", "Use in Combo").SetValue(true));
-                q.AddItem(new MenuItem("apollo.viktor.combo.q.dont", "Only use if in AA Range").SetValue(false));
                 combo.AddSubMenu(q);
 
                 var w = new Menu("W", "apollo.viktor.combo.w");

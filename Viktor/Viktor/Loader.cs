@@ -30,10 +30,9 @@ namespace Viktor
                     Spells.Init();
                     Config.Init();
                     Drawing.Init();
-                    Utility.HpBarDamageIndicator.DamageToUnit = Damages.ComboDmg;
-                    Utility.HpBarDamageIndicator.Enabled = true;
                     Mechanics.Init();
-                    Notifications.AddNotification("Apollo's " + ObjectManager.Player.ChampionName + " Loaded", 5000, false);
+                    Config.ShowNotification(
+                        "Apollo's " + ObjectManager.Player.ChampionName + " Loaded", Config.NotificationColor, 7000);
                 };
             }
         }

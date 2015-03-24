@@ -1,14 +1,8 @@
-﻿// ReSharper disable ConditionIsAlwaysTrueOrFalse
-// ReSharper disable InvertIf
-// ReSharper disable FunctionComplexityOverflow
-// ReSharper disable ConvertClosureToMethodGroup
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
-using SharpDX;
 
 namespace Viktor
 {
@@ -27,6 +21,7 @@ namespace Viktor
             GameObject.OnDelete += OnDelete;
             Interrupter2.OnInterruptableTarget += OnInterruptableTarget;
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
+            Orbwalking.AfterAttack += AfterAttack;
         }
 
         private static void OnUpdate(EventArgs args)
@@ -38,7 +33,9 @@ namespace Viktor
             KillSteal();
 
             if (Config.ViktorConfig.Item("apollo.viktor.harass.key").GetValue<KeyBind>().Active)
+            {
                 Harass();
+            }
 
             switch (Config.Orbwalker.ActiveMode)
             {
@@ -129,57 +126,12 @@ namespace Viktor
         private static void Laneclear()
         {
             var mana = Player.ManaPercent > Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
-            var useQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.bool").GetValue<bool>();
             var useE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.bool").GetValue<bool>();
-            var lastHitQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.lasthit").GetValue<bool>();
-            var lastHitCanonQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.canon").GetValue<bool>();
             var minhitE = Config.ViktorConfig.Item("apollo.viktor.laneclear.e.hit").GetValue<Slider>().Value;
 
             if (!mana)
                 return;
 
-            if (useQ)
-            {
-                var minions = MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.Q].Range);
-
-                if (minions == null)
-                {
-                    return;
-                }
-
-                var minionLasthit =
-                    minions.Where(
-                        h =>
-                            HealthPrediction.GetHealthPrediction(
-                                h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
-                                (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) < Damages.Dmg.Q(h) &&
-                            HealthPrediction.GetHealthPrediction(
-                                h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
-                                (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
-                        .OrderBy(h => h.Health)
-                        .FirstOrDefault();
-                if (lastHitQ && minionLasthit != null)
-                {
-                    Spell[SpellSlot.Q].CastOnUnit(minionLasthit, PacketCast);
-                }
-
-                var canonLasthit =
-                    minions.Where(
-                        h =>
-                            h.BaseSkinName.Contains("Siege") &&
-                            HealthPrediction.GetHealthPrediction(
-                                h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
-                                (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) < Damages.Dmg.Q(h) &&
-                            HealthPrediction.GetHealthPrediction(
-                                h, (int)(Player.Distance(h) / Spell[SpellSlot.Q].Speed),
-                                (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
-                        .OrderBy(h => h.Health)
-                        .FirstOrDefault();
-                if (lastHitCanonQ && canonLasthit != null)
-                {
-                    Spell[SpellSlot.Q].CastOnUnit(canonLasthit, PacketCast);
-                }
-            }
             if (useE && Spell[SpellSlot.E].IsReady())
             {
                 foreach (var minion in MinionManager.GetMinions(Player.Position, Spells.ECastRange))
@@ -272,46 +224,59 @@ namespace Viktor
                 return;
             }
 
-            var stunT =
-                HeroManager.Enemies.Where(
-                    h =>
-                        h.IsValidTarget(Spell[SpellSlot.W].Range) &&
-                        (h.HasBuffOfType(BuffType.Knockup) || h.HasBuffOfType(BuffType.Snare) ||
-                         h.HasBuffOfType(BuffType.Stun) || h.HasBuffOfType(BuffType.Suppression) ||
-                         h.HasBuffOfType(BuffType.Taunt)) && !h.IsInvulnerable)
-                    .OrderBy(h => TargetSelector.GetPriority(h))
-                    .FirstOrDefault();
-            if (stunT != null && Config.ViktorConfig.Item("apollo.viktor.combo.w.stunned").GetValue<bool>())
+            foreach (var Object in
+                ObjectManager.Get<Obj_AI_Base>()
+                    .Where(
+                        h =>
+                            h.Distance(Player.ServerPosition) < Spell[SpellSlot.W].Range && h.Team != Player.Team &&
+                            (h.HasBuff("teleport_target", true) || h.HasBuff("Pantheon_GrandSkyfall_Jump", true))))
             {
-                Spell[SpellSlot.W].Cast(stunT, PacketCast, true);
+                Spell[SpellSlot.W].Cast(Object.Position, true);
             }
 
-            var slowT =
-                HeroManager.Enemies.Where(
-                    h =>
-                        h.IsValidTarget(Spell[SpellSlot.W].Range - Spell[SpellSlot.W].Width) &&
-                        h.HasBuffOfType(BuffType.Slow)).OrderBy(h => TargetSelector.GetPriority(h)).FirstOrDefault();
-            var slowTpre = Spell[SpellSlot.W].GetPrediction(slowT, true, -Spell[SpellSlot.E].Width);
-            if (slowT != null && Config.ViktorConfig.Item("apollo.viktor.combo.w.slow").GetValue<bool>())
+            foreach (
+                var enemy in
+                    ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsValidTarget(Spell[SpellSlot.W].Range)))
             {
-                Spell[SpellSlot.W].Cast(slowTpre.CastPosition, PacketCast);
-            }
-
-            var t =
-                HeroManager.Enemies.Where(h => h.IsValidTarget(300))
-                    .OrderBy(h => TargetSelector.GetPriority(h))
-                    .FirstOrDefault();
-            var tpre = Spell[SpellSlot.E].GetPrediction(t, true);
-            if (t != null)
-            {
-                if (tpre.Hitchance >= HitChance.High)
+                if (enemy.HasBuff("rocketgrab2"))
                 {
-                    Spell[SpellSlot.W].Cast(tpre.CastPosition, PacketCast);
+                    foreach (var ally in ObjectManager.Get<Obj_AI_Hero>())
+                    {
+                        if (ally.BaseSkinName == "Blitzcrank" &&
+                            ObjectManager.Player.Distance(ally.Position) < Spell[SpellSlot.W].Range)
+                            Spell[SpellSlot.W].Cast(ally, true);
+                    }
+
                 }
-                if (tpre.AoeTargetsHitCount >=
-                    Config.ViktorConfig.Item("apollo.viktor.combo.w.hit").GetValue<Slider>().Value)
+                else if (enemy.HasBuffOfType(BuffType.Stun) || enemy.HasBuffOfType(BuffType.Snare) ||
+                         enemy.HasBuffOfType(BuffType.Charm) || enemy.HasBuffOfType(BuffType.Fear) ||
+                         enemy.HasBuffOfType(BuffType.Taunt) || enemy.HasBuffOfType(BuffType.Suppression) ||
+                         enemy.IsStunned || enemy.HasBuff("Recall"))
+                    Spell[SpellSlot.W].Cast(enemy, true);
+                else
+                    Spell[SpellSlot.W].CastIfHitchanceEquals(enemy, HitChance.Immobile, true);
+            }
+
+            var ta = TargetSelector.GetTarget(Spell[SpellSlot.W].Range, TargetSelector.DamageType.Magical);
+            if (ta != null)
+            {
+                if (Config.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo &&
+                    ta.IsValidTarget(500) && ta.Path.Count() < 2)
                 {
-                    Spell[SpellSlot.W].Cast(tpre.CastPosition, PacketCast);
+                    if (ta.HasBuffOfType(BuffType.Slow))
+                        Spell[SpellSlot.W].CastIfHitchanceEquals(ta, HitChance.VeryHigh, true);
+                    else if (ta.Path.Count() < 2 && ta.CountEnemiesInRange(250) > 2)
+                        Spell[SpellSlot.W].CastIfHitchanceEquals(ta, HitChance.VeryHigh, true);
+                }
+
+                var waypoints = ta.GetWaypoints();
+                if (ta.Path.Count() < 2 &&
+                    (ta.ServerPosition.Distance(waypoints.Last().To3D()) > 500 ||
+                     Math.Abs(
+                         (ObjectManager.Player.Distance(waypoints.Last().To3D()) -
+                          ObjectManager.Player.Distance(ta.Position))) > 400 || ta.Path.Count() == 0))
+                {
+                    Spell[SpellSlot.W].CastIfHitchanceEquals(ta, HitChance.VeryHigh, true);
                 }
             }
         }
@@ -372,12 +337,10 @@ namespace Viktor
         {
             if (ChaosStorm != null)
             {
-                var stormT =
-                    HeroManager.Enemies.Where(h => h.IsValid && h.ServerPosition.Distance(ChaosStorm.Position) < 1500)
-                        .OrderBy(h => TargetSelector.GetPriority(h))
-                        .FirstOrDefault();
+                var stormT = TargetSelector.GetTarget(
+                    Player, 1600, TargetSelector.DamageType.Magical, true, null, ChaosStorm.Position);
                 if (stormT != null)
-                    Utility.DelayAction.Add(600, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
+                    Utility.DelayAction.Add(2000, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
             }
         }
 
@@ -468,6 +431,52 @@ namespace Viktor
             if (sender.Name.Contains("Viktor_Base_R_Droid.troy"))
             {
                 ChaosStorm = null;
+            }
+        }
+
+        private static void AfterAttack(AttackableUnit unit, AttackableUnit unit2)
+        {
+            var minions = MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.Q].Range);
+            var useQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.bool").GetValue<bool>();
+            var lastHitQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.lasthit").GetValue<bool>();
+            var lastHitCanonQ = Config.ViktorConfig.Item("apollo.viktor.laneclear.q.canon").GetValue<bool>();
+            var mana = Player.ManaPercent > Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
+            if (Config.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear || !mana || minions == null || !Spell[SpellSlot.Q].IsReady() || !useQ)
+                return;
+
+            var minionLasthit =
+                minions.Where(
+                    h =>
+                        HealthPrediction.GetHealthPrediction(
+                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) <
+                        Player.GetSpellDamage(h, SpellSlot.Q) &&
+                        HealthPrediction.GetHealthPrediction(
+                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
+                    .OrderBy(h => h.Health)
+                    .FirstOrDefault();
+            if (lastHitQ && minionLasthit != null)
+            {
+                Spell[SpellSlot.Q].CastOnUnit(minionLasthit, PacketCast);
+            }
+
+            var canonLasthit =
+                minions.Where(
+                    h =>
+                        h.BaseSkinName.Contains("Siege") &&
+                        HealthPrediction.GetHealthPrediction(
+                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) <
+                        Player.GetSpellDamage(h, SpellSlot.Q) &&
+                        HealthPrediction.GetHealthPrediction(
+                            h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                            (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
+                    .OrderBy(h => h.Health)
+                    .FirstOrDefault();
+            if (lastHitCanonQ && canonLasthit != null)
+            {
+                Spell[SpellSlot.Q].CastOnUnit(canonLasthit, PacketCast);
             }
         }
     }

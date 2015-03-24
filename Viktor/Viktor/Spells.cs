@@ -10,9 +10,9 @@ namespace Viktor
 
         public static readonly Dictionary<SpellSlot, Spell> Spell = new Dictionary<SpellSlot, Spell>
         {
-            { SpellSlot.Q, new Spell(SpellSlot.Q, 700f) },
+            { SpellSlot.Q, new Spell(SpellSlot.Q, 600f) },
             { SpellSlot.W, new Spell(SpellSlot.W, 700f) },
-            { SpellSlot.E, new Spell(SpellSlot.E, 700f) },
+            { SpellSlot.E, new Spell(SpellSlot.E, 600f) },
             { SpellSlot.R, new Spell(SpellSlot.R, 700f) }
         };
 

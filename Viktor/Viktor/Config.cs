@@ -10,6 +10,8 @@ namespace Viktor
         public static Menu TargetSelectorMenu;
         public static Orbwalking.Orbwalker Orbwalker;
 
+        public static readonly Color NotificationColor = Color.FromArgb(136, 207, 240);
+
         public static void Init()
         {
             ViktorConfig = new Menu("Apollo's " + ObjectManager.Player.ChampionName, "apollo.viktor", true);
@@ -169,6 +171,19 @@ namespace Viktor
             }
 
             ViktorConfig.AddToMainMenu();
+        }
+
+        public static Notification ShowNotification(string message, Color color, int duration = -1, bool dispose = true)
+        {
+            var notif = new Notification(message).SetTextColor(color);
+            Notifications.AddNotification(notif);
+
+            if (dispose)
+            {
+                Utility.DelayAction.Add(duration, () => notif.Dispose());
+            }
+
+            return notif;
         }
     }
 }

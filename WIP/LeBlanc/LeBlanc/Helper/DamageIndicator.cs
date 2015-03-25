@@ -5,7 +5,7 @@ using LeagueSharp.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
 
-namespace LeBlanc
+namespace LeBlanc.Helper
 {
     class DamageIndicator
     {
@@ -25,6 +25,29 @@ namespace LeBlanc
 
         private static readonly Render.Text Text = new Render.Text(
             0, 0, "", 11, new ColorBGRA(255, 0, 0, 255), "monospace");
+
+        public static void Init(DamageToUnitDelegate damage)
+        {
+            var drawComboDamageMenu = new MenuItem("apollo.marksman.draw.ind.bool", "Draw Combo Damage", true).SetValue(true);
+            var drawFill = new MenuItem("apollo.marksman.draw.ind.fill", "Draw Combo Damage Fill", true).SetValue(new Circle(true, Color.FromArgb(90, 255, 169, 4)));
+            Config.Configs.Drawing.AddItem(drawComboDamageMenu);
+            Config.Configs.Drawing.AddItem(drawFill);
+            DamageToUnit = damage;
+            Enabled = drawComboDamageMenu.GetValue<bool>();
+            Fill = drawFill.GetValue<Circle>().Active;
+            FillColor = drawFill.GetValue<Circle>().Color;
+            drawComboDamageMenu.ValueChanged +=
+                delegate(object sender, OnValueChangeEventArgs eventArgs)
+                {
+                    Enabled = eventArgs.GetNewValue<bool>();
+                };
+            drawFill.ValueChanged +=
+                delegate(object sender, OnValueChangeEventArgs eventArgs)
+                {
+                    Fill = eventArgs.GetNewValue<Circle>().Active;
+                    FillColor = eventArgs.GetNewValue<Circle>().Color;
+                };
+        }
 
         public static DamageToUnitDelegate DamageToUnit
         {

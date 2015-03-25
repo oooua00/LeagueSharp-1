@@ -6,7 +6,7 @@ using LeagueSharp.Common;
 using SharpDX.Direct3D9;
 using Font = SharpDX.Direct3D9.Font;
 
-namespace LeBlanc
+namespace LeBlanc.Helper
 {
     internal class AssassinManager
     {

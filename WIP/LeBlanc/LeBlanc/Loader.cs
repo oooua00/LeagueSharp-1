@@ -13,15 +13,16 @@ namespace LeBlanc
                 {
                     if (ObjectManager.Player.ChampionName != "Leblanc")
                         return;
-
+                    //todo Longrange w
+                    Helper.Updater.Init("Apollo16/LeagueSharp/master/LeBlanc/LeBlanc");
                     Config.Init();
                     Helper.Spells.Init();
                     Helper.Objects.Init();
                     Drawings.Init();
-                    AssassinManager.Init();
-                    UpdateChecker.Initialize("Apollo16/LeagueSharp/tree/master/LeBlanc");
+                    Helper.AssassinManager.Init();
                     Mechanics.Init();
-                    Notifications.AddNotification("Apollo's " + ObjectManager.Player.ChampionName + " Loaded", 5000);
+                    Config.ShowNotification(
+                        "Apollo's " + ObjectManager.Player.ChampionName + " Reborn Loaded", Config.NotificationColor, 7000);
                 };
             }
         }

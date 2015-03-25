@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using LeBlanc.Helper;
 
 namespace LeBlanc
 {
     internal class Mechanics
     {
         private static readonly Obj_AI_Hero Player = ObjectManager.Player;
-        private static readonly Dictionary<SpellSlot, Spell> Spell = Helper.Spells.Spell;
-        private static readonly bool PacketCast = Config.LeBlanc.Item("apollo.leblanc.packetcast").GetValue<bool>();
+        private static readonly Dictionary<SpellSlot, Spell> Spell = Spells.Spell;
+        private static readonly bool PacketCast = Config.LeBlanc.GetBool("packetcast");
         public static readonly SpellSlot IgniteSlot = Player.GetSpellSlot("SummonerDot");
 
         public static void Init()
@@ -18,22 +19,20 @@ namespace LeBlanc
             Game.OnUpdate += OnUpdate;
             AntiGapcloser.OnEnemyGapcloser += AnitGapcloser;
             Interrupter2.OnInterruptableTarget += OnPossibleToInterrupt;
+            Orbwalking.AfterAttack += AfterAttack;
         }
         private static void OnUpdate(EventArgs args)
         {
             if (Player.IsDead || Player.IsRecalling() || args == null)
                 return;
 
-            Killsteal();
+            if (!Config.LeBlanc.GetKeyBind("flee.key").Active)
+                Killsteal();
+
             Misc();
 
-            var harassKey = Config.LeBlanc.Item("apollo.leblanc.harass.key").GetValue<KeyBind>();
-            if (harassKey.Active)
+            if (Config.LeBlanc.GetKeyBind("harass.key").Active)
                 Harass();
-
-            //Notifications
-            Notifications.AddNotification("Auto Harass: " + harassKey.Active.ToString(), 1, false);
-            Notifications.AddNotification("PacketCast: " + PacketCast.ToString(), 1, false);
 
 
             switch (Config.Orbwalker.ActiveMode)
@@ -56,7 +55,7 @@ namespace LeBlanc
                 }
                 case Orbwalking.OrbwalkingMode.None:
                 {
-                    if (Config.LeBlanc.Item("apollo.leblanc.flee.key").GetValue<KeyBind>().Active)
+                    if (Config.LeBlanc.GetKeyBind("flee.key").Active)
                         Flee();
                     break;
                 }
@@ -66,165 +65,148 @@ namespace LeBlanc
         private static void Combo()
         {
             var t = GetTarget(Spell[SpellSlot.E].Range, TargetSelector.DamageType.Magical);
-            var rName = Spell[SpellSlot.R].Instance.Name;
-            var wName = Spell[SpellSlot.W].Instance.Name;
 
-            if (!t.IsValidTarget())
+            if (t == null)
                 return;
 
-            if (Helper.SpellDamage.R.W(t) > 2 * Helper.SpellDamage.R.Q(t) && rName != Helper.Spells.Name.R.W2 &&
-                Helper.Use.R.Bool(Orbwalking.OrbwalkingMode.Combo) && Spell[SpellSlot.R].IsReady())
+            if (IgniteSlot != SpellSlot.Unknown && IgniteSlot.IsReady() && Config.LeBlanc.GetBool("combo.ignite.bool") &&
+                t.Health < Damages.ComboDamage(t))
             {
-
-                if (rName == Helper.Spells.Name.R.W)
-                {
-                    Helper.Cast.R.W(t, Helper.GetHitchance.R.W(Orbwalking.OrbwalkingMode.Combo));
-                }
-                else if ((!Spell[SpellSlot.W].IsReady() || wName == Helper.Spells.Name.W2))
-                {
-                    if (((t.Health - ComboDmg.Get(t)) / t.MaxHealth) >= .4 && rName == Helper.Spells.Name.R.E)
-                    {
-                        Helper.Cast.R.E(t, Helper.GetHitchance.R.E(Orbwalking.OrbwalkingMode.Combo));
-                    }
-                    else if (rName == Helper.Spells.Name.R.Q)
-                    {
-                        Helper.Cast.R.Q(t);
-                    }
-                }
-            }
-            else if (rName != Helper.Spells.Name.R.W2 && Helper.Use.R.Bool(Orbwalking.OrbwalkingMode.Combo) && Spell[SpellSlot.R].IsReady())
-            {
-                if (rName == Helper.Spells.Name.R.Q)
-                {
-                    Helper.Cast.R.Q(t);
-                }
-                else if (!Spell[SpellSlot.Q].IsReady())
-                {
-                    if (((t.Health - ComboDmg.Get(t)) / t.MaxHealth) >= .4 && rName == Helper.Spells.Name.R.E)
-                    {
-                        Helper.Cast.R.E(t, Helper.GetHitchance.R.E(Orbwalking.OrbwalkingMode.Combo));
-                    }
-                    else if (rName == Helper.Spells.Name.R.W)
-                    {
-                        Helper.Cast.R.W(t, Helper.GetHitchance.R.W(Orbwalking.OrbwalkingMode.Combo));
-                    }
-                }
+                Player.Spellbook.CastSpell(IgniteSlot, t);
             }
 
-            if (Helper.Use.Q(Orbwalking.OrbwalkingMode.Combo))
+            if (Spell[SpellSlot.R].IsReadyAndActive(MenuHelper.Mode.Combo))
             {
-                Helper.Cast.Q(t);
+                if (Damages.R.W(t) > 2 * Damages.R.Q(t))
+                {
+
+                    if (Spell[SpellSlot.R].HasStatus(SpellSlot.W))
+                    {
+                        Cast.R.W(t, Spell[SpellSlot.R].GetHitChance(MenuHelper.Mode.Combo, "W"));
+                    }
+                    else if ((!Spell[SpellSlot.W].IsReady() || Spell[SpellSlot.W].IsSecond()))
+                    {
+                        if (((t.Health - Damages.ComboDamage(t)) / t.MaxHealth) >= .4 &&
+                            Spell[SpellSlot.R].HasStatus(SpellSlot.E))
+                        {
+                            Cast.R.E(t, Spell[SpellSlot.R].GetHitChance(MenuHelper.Mode.Combo, "E"));
+                        }
+                        else if (Spell[SpellSlot.R].HasStatus(SpellSlot.Q))
+                        {
+                            Cast.R.Q(t);
+                        }
+                    }
+                }
+                else
+                {
+                    if (Spell[SpellSlot.R].HasStatus(SpellSlot.Q))
+                    {
+                        Cast.R.Q(t);
+                    }
+                    else if (!Spell[SpellSlot.Q].IsReady())
+                    {
+                        if (((t.Health - Damages.ComboDamage(t)) / t.MaxHealth) >= .4 && Spell[SpellSlot.R].HasStatus(SpellSlot.E))
+                        {
+                            Cast.R.E(t, Spell[SpellSlot.R].GetHitChance(MenuHelper.Mode.Combo, "E"));
+                        }
+                        else if (Spell[SpellSlot.R].HasStatus(SpellSlot.W))
+                        {
+                            Cast.R.W(t, Spell[SpellSlot.R].GetHitChance(MenuHelper.Mode.Combo, "W"));
+                        }
+                    }
+                }
             }
-            if (Helper.Use.W(Orbwalking.OrbwalkingMode.Combo) && wName != Helper.Spells.Name.W2 &&
-                !Spell[SpellSlot.Q].IsReady())
+
+            if (Spell[SpellSlot.Q].IsReadyAndActive(MenuHelper.Mode.Combo))
             {
-                Helper.Cast.W(t, Helper.GetHitchance.W(Orbwalking.OrbwalkingMode.Combo));
+                Cast.Q(t);
             }
-            if (Helper.Use.E(Orbwalking.OrbwalkingMode.Combo))
+            if (Spell[SpellSlot.W].IsReadyAndActive(MenuHelper.Mode.Combo) && !Spell[SpellSlot.W].IsSecond())
             {
-                Helper.Cast.E(t, Helper.GetHitchance.E(Orbwalking.OrbwalkingMode.Combo));
+                Cast.W(t, Spell[SpellSlot.W].GetHitChance(MenuHelper.Mode.Combo));
             }
-            if (rName == Helper.Spells.Name.R.W2)
+            if (Spell[SpellSlot.E].IsReadyAndActive(MenuHelper.Mode.Combo))
             {
-                Helper.Cast.R.W2();
+                Cast.E(t, Spell[SpellSlot.E].GetHitChance(MenuHelper.Mode.Combo));
+            }
+            if (Spell[SpellSlot.R].IsSecond())
+            {
+                Cast.R.W2();
             }
         }
         private static void Laneclear()
         {
             var minions = MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.Q].Range);
-            var mana = Player.ManaPercent > Config.LeBlanc.Item("apollo.leblanc.laneclear.mana").GetValue<Slider>().Value;
+            var mana = Player.ManaPercent > Config.LeBlanc.GetSlider("laneclear.mana");
 
-            if (Helper.Use.W2(Orbwalking.OrbwalkingMode.LaneClear) &&
-                Spell[SpellSlot.W].Instance.Name == Helper.Spells.Name.W2)
+            if (Config.LeBlanc.GetBool("laneclear.w2.bool") && Spell[SpellSlot.W].IsSecond())
             {
-                Helper.Cast.W2();
+                Cast.W2();
             }
 
             if (minions == null || !mana)
                 return;
 
-            if (Helper.Use.Q(Orbwalking.OrbwalkingMode.LaneClear) && Spell[SpellSlot.Q].IsReady())
-            {
-                var qMinion =
-                    minions.Where(
-                        h =>
-                            Helper.GetHealthPrediction.From(Player, h, SpellSlot.W, Helper.SpellDamage.Q(h), true) &&
-                            Helper.GetHealthPrediction.From(Player, h, SpellSlot.W, 0, false))
-                        .OrderBy(h => h.Health)
-                        .FirstOrDefault();
-                if (qMinion != null)
-                {
-                    Orbwalking.AfterAttack += (unit, target) =>
-                    {
-                        Helper.Cast.Q(qMinion);
-                    };
-                }
-            }
-
-            if (Helper.Use.W(Orbwalking.OrbwalkingMode.LaneClear) && Spell[SpellSlot.W].IsReady() &&
-                Spell[SpellSlot.W].Instance.Name != Helper.Spells.Name.W2)
+            if (Spell[SpellSlot.W].IsReadyAndActive(MenuHelper.Mode.Laneclear) && !Spell[SpellSlot.W].IsSecond())
             {
                 var farmLoc =
                     MinionManager.GetBestCircularFarmLocation(
                         minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.W].Width,
                         Spell[SpellSlot.W].Range);
-                var minHit = Config.LeBlanc.Item("apollo.leblanc.laneclear.w.hit").GetValue<Slider>().Value;
 
-                if (farmLoc.MinionsHit >= minHit)
+                if (farmLoc.MinionsHit >= Config.LeBlanc.GetSlider("laneclear.w.hit"))
                     Spell[SpellSlot.W].Cast(farmLoc.Position, PacketCast);
             }
         }
         private static void Jungleclear()
         {
-            var minions = MinionManager.GetMinions(
+            var minion = MinionManager.GetMinions(
                 Player.ServerPosition, Spell[SpellSlot.W].Range, MinionTypes.All, MinionTeam.Neutral,
-                MinionOrderTypes.MaxHealth);
-            var mana = Player.ManaPercent > Config.LeBlanc.Item("apollo.leblanc.laneclear.mana").GetValue<Slider>().Value;
+                MinionOrderTypes.MaxHealth).FirstOrDefault();
+            var mana = Player.ManaPercent > Config.LeBlanc.GetSlider("laneclear.mana");
 
-            if (Helper.Use.W2(Orbwalking.OrbwalkingMode.LaneClear) &&
-                Spell[SpellSlot.W].Instance.Name == Helper.Spells.Name.W2)
+            if (Config.LeBlanc.GetBool("laneclear.w2.bool") && Spell[SpellSlot.W].IsSecond())
             {
-                Helper.Cast.W2();
+                Cast.W2();
             }
 
-            if (minions == null || !mana)
+            if (minion == null || !mana)
                 return;
 
-            if (Helper.Use.Q(Orbwalking.OrbwalkingMode.LaneClear))
+            if (Spell[SpellSlot.Q].IsReadyAndActive(MenuHelper.Mode.Laneclear))
             {
-                Helper.Cast.Q(minions.FirstOrDefault());
+                Cast.Q(minion);
             }
-            if (Helper.Use.W(Orbwalking.OrbwalkingMode.LaneClear) && !Spell[SpellSlot.Q].IsReady() &&
-                Spell[SpellSlot.W].Instance.Name != Helper.Spells.Name.W2)
+            if (Spell[SpellSlot.W].IsReadyAndActive(MenuHelper.Mode.Laneclear) && !Spell[SpellSlot.Q].IsReady() &&
+                !Spell[SpellSlot.W].IsSecond())
             {
-                Spell[SpellSlot.W].Cast(minions.FirstOrDefault(), PacketCast);
+                Spell[SpellSlot.W].Cast(minion, PacketCast);
             }
         }
         private static void Harass()
         {
             var t = TargetSelector.GetTarget(Player, Spell[SpellSlot.E].Range, TargetSelector.DamageType.Magical);
-            var wName = Spell[SpellSlot.W].Instance.Name;
-            var mana = Player.ManaPercent > Config.LeBlanc.Item("apollo.leblanc.harass.mana").GetValue<Slider>().Value;
+            var mana = Player.ManaPercent > Config.LeBlanc.GetSlider("harass.mana");
 
-            if (!t.IsValidTarget() && !mana)
+            if (t == null && !mana)
                 return;
 
-            if (Helper.Use.Q(Orbwalking.OrbwalkingMode.Mixed))
+            if (Spell[SpellSlot.Q].IsReadyAndActive(MenuHelper.Mode.Harass))
             {
-                Helper.Cast.Q(t);
+                Cast.Q(t);
             }
-            if (!Spell[SpellSlot.Q].IsReady() && Helper.Use.W(Orbwalking.OrbwalkingMode.Mixed) &&
-                wName != Helper.Spells.Name.W2)
+            if (!Spell[SpellSlot.Q].IsReady() && Spell[SpellSlot.W].IsReadyAndActive(MenuHelper.Mode.Harass) &&
+                !Spell[SpellSlot.W].IsSecond())
             {
-                Helper.Cast.W(t, Helper.GetHitchance.W(Orbwalking.OrbwalkingMode.Mixed));
+                Cast.W(t, Spell[SpellSlot.W].GetHitChance(MenuHelper.Mode.Harass));
             }
-            if (Helper.Use.E(Orbwalking.OrbwalkingMode.Mixed))
+            if (Spell[SpellSlot.E].IsReadyAndActive(MenuHelper.Mode.Harass))
             {
-                Helper.Cast.E(t, Helper.GetHitchance.E(Orbwalking.OrbwalkingMode.Mixed));
+                Cast.E(t, Spell[SpellSlot.E].GetHitChance(MenuHelper.Mode.Harass));
             }
-            if (Helper.Use.W2(Orbwalking.OrbwalkingMode.Mixed) && wName == Helper.Spells.Name.W2)
+            if (Config.LeBlanc.GetBool("harass.w2.bool") && Spell[SpellSlot.W].IsSecond())
             {
-                Helper.Cast.W2();
+                Cast.W2();
             }
         }
         private static void Flee()
@@ -236,23 +218,20 @@ namespace LeBlanc
                     .OrderBy(h => Player.Distance(h))
                     .FirstOrDefault();
             var pos = Player.ServerPosition.Extend(Game.CursorPos, Spell[SpellSlot.W].Range);
-            var rName = Spell[SpellSlot.R].Instance.Name;
-            var wName = Spell[SpellSlot.W].Instance.Name;
 
-            if (t.IsValidTarget() && Spell[SpellSlot.E].IsReady() && Helper.Use.E(Orbwalking.OrbwalkingMode.None))
+            if (t != null && Spell[SpellSlot.E].IsReadyAndActive(MenuHelper.Mode.Flee))
             {
-                Helper.Cast.E(t, Helper.GetHitchance.E(Orbwalking.OrbwalkingMode.None));
+                Cast.E(t, Spell[SpellSlot.E].GetHitChance(MenuHelper.Mode.Flee));
             }
             if (NavMesh.GetCollisionFlags(pos.X, pos.Y) != CollisionFlags.Wall &&
                 NavMesh.GetCollisionFlags(pos.X, pos.Y) != CollisionFlags.Building)
             {
-                if (Spell[SpellSlot.W].IsReady() && Helper.Use.W(Orbwalking.OrbwalkingMode.None) &&
-                    wName != Helper.Spells.Name.W2)
+                if (Spell[SpellSlot.W].IsReadyAndActive(MenuHelper.Mode.Flee) && !Spell[SpellSlot.W].IsSecond())
                 {
                     Spell[SpellSlot.W].Cast(pos, PacketCast);
                 }
-                if (Spell[SpellSlot.R].IsReady() && Helper.Use.R.W(Orbwalking.OrbwalkingMode.None) &&
-                    rName != Helper.Spells.Name.R.W2 && rName == Helper.Spells.Name.R.W)
+                if (Spell[SpellSlot.R].IsReadyAndActive(MenuHelper.Mode.Flee) && !Spell[SpellSlot.R].IsSecond() &&
+                    Spell[SpellSlot.R].HasStatus(SpellSlot.W))
                 {
                     Spell[SpellSlot.R].Cast(pos, PacketCast);
                 }
@@ -260,121 +239,133 @@ namespace LeBlanc
         }
         private static void Killsteal()
         {
-            var t =
-                HeroManager.Enemies.Where(
-                    h =>
-                        h.IsValidTarget(Spell[SpellSlot.Q].Range) &&
-                        Helper.GetHealthPrediction.From(
-                            Player, h, SpellSlot.W, 2 * Helper.SpellDamage.Q(h) + Helper.SpellDamage.W(h), true) &&
-                        Helper.GetHealthPrediction.From(Player, h, SpellSlot.W, 0, false)).OrderBy(h => h.Health);
-            var useQ = Config.LeBlanc.Item("apollo.leblanc.ks.q.bool").GetValue<bool>();
-            var useW = Config.LeBlanc.Item("apollo.leblanc.ks.w.bool").GetValue<bool>();
-            var wName = Spell[SpellSlot.W].Instance.Name;
+            var t = HeroManager.Enemies.Where(h => h.IsValidTarget(Spell[SpellSlot.Q].Range)).ToList();
 
-            if (t != null)
+            if (t.Any())
             {
-                if (t.FirstOrDefault().IsValidTarget(Spell[SpellSlot.W].Range) && useQ && useW &&
-                    Spell[SpellSlot.Q].IsReady() && Spell[SpellSlot.W].IsReady() && wName != Helper.Spells.Name.W2)
+                if (Spell[SpellSlot.Q].IsReadyAndActive(MenuHelper.Mode.Ks) &&
+                    Spell[SpellSlot.W].IsReadyAndActive(MenuHelper.Mode.Ks) && !Spell[SpellSlot.W].IsSecond())
                 {
-                    Helper.Cast.Q(t.FirstOrDefault());
-                    if (!Spell[SpellSlot.Q].IsReady())
-                        Helper.Cast.W(t.FirstOrDefault(), HitChance.High);
-                    if (wName == Helper.Spells.Name.W2)
-                        Helper.Cast.W2();
-                }
-                else
-                {
-                    var qT =
+                    var tQw =
                         t.Where(
                             h =>
-                                Helper.GetHealthPrediction.From(Player, h, SpellSlot.W, Helper.SpellDamage.Q(h), true) &&
-                                Helper.GetHealthPrediction.From(Player, h, SpellSlot.W, 0, false))
-                            .OrderBy(h => h.Health).FirstOrDefault();
-                    var wT =
-                        t.Where(
-                            h =>
-                                h.IsValidTarget(Spell[SpellSlot.W].Range) &&
-                                Helper.GetHealthPrediction.From(Player, h, SpellSlot.W, Helper.SpellDamage.W(h), true) &&
-                                Helper.GetHealthPrediction.From(Player, h, SpellSlot.W, 0, false))
-                            .OrderBy(h => h.Health).FirstOrDefault();
-
-                    if (wT != null && useW && Spell[SpellSlot.W].IsReady() && wName != Helper.Spells.Name.W2)
+                                h.Health + 14 <
+                                2 * Player.GetSpellDamage(h, SpellSlot.Q) + Player.GetSpellDamage(h, SpellSlot.W))
+                            .OrderBy(h => TargetSelector.GetPriority(h))
+                            .FirstOrDefault();
+                    if (tQw != null && tQw.IsValid)
                     {
-                        Helper.Cast.W(wT, HitChance.High);
-                        if (wName == Helper.Spells.Name.W2)
-                            Helper.Cast.W2();
+                        Cast.Q(tQw);
+                        Cast.W(tQw, HitChance.Medium);
                     }
-                    else if (qT != null && useQ && Spell[SpellSlot.Q].IsReady())
+                }
+                else if (Spell[SpellSlot.Q].IsReadyAndActive(MenuHelper.Mode.Ks))
+                {
+                    var tQ =
+                        t.Where(h => h.Health + 14 < Player.GetSpellDamage(h, SpellSlot.Q))
+                            .OrderBy(h => TargetSelector.GetPriority(h))
+                            .FirstOrDefault();
+                    if (tQ != null && tQ.IsValid)
                     {
-                        Helper.Cast.Q(qT);
+                        Cast.Q(tQ);
+                    }
+                }
+                else if (Spell[SpellSlot.W].IsReadyAndActive(MenuHelper.Mode.Ks) && !Spell[SpellSlot.W].IsSecond())
+                {
+                    var tW =
+                        t.Where(h => h.Health + 14 < Player.GetSpellDamage(h, SpellSlot.W))
+                            .OrderBy(h => TargetSelector.GetPriority(h))
+                            .FirstOrDefault();
+                    if (tW != null && tW.IsValid)
+                    {
+                        Cast.W(tW, HitChance.Medium);
                     }
                 }
             }
         }
         private static void Misc()
         {
-            if (Config.LeBlanc.Item("apollo.leblanc.misc.2w.mouseover.bool").GetValue<bool>() &&
-                Helper.Objects.SecondW.Object != null)
+            if (Config.LeBlanc.GetBool("misc.2w.mouseover.bool") && Spell[SpellSlot.W].IsSecond())
             {
                 var width = Config.LeBlanc.Item("apollo.leblanc.misc.2w.mouseover.width").GetValue<Slider>().Value;
-                var exPos = Helper.Objects.SecondW.Object.Position.Extend(Game.CursorPos, width);
-                var exPosDis = Helper.Objects.SecondW.Object.Position.Distance(exPos);
-                var cursorDis = Helper.Objects.SecondW.Object.Position.Distance(Game.CursorPos);
-                if (Spell[SpellSlot.W].Instance.Name == Helper.Spells.Name.W2 && cursorDis < exPosDis)
+                var exPos = Objects.SecondW.Object.Position.Extend(Game.CursorPos, width);
+                var exPosDis = Objects.SecondW.Object.Position.Distance(exPos);
+                var cursorDis = Objects.SecondW.Object.Position.Distance(Game.CursorPos);
+                if (cursorDis < exPosDis)
                 {
-                    Helper.Cast.W2();
+                    Cast.W2();
                 }
             }
 
-            var pet = Helper.Objects.Clone.Pet;
-            if (Config.LeBlanc.Item("apollo.leblanc.misc.clone.move.bool").GetValue<bool>() && pet != null &&
-                pet.IsValid && !pet.IsDead && pet.Health > 1)
+            var pet = Objects.Clone.Pet;
+            if (Config.LeBlanc.GetBool("misc.clone.move.bool") && pet != null && pet.IsValid && !pet.IsDead &&
+                pet.Health > 1)
             {
                 var t =
-                    HeroManager.Enemies.Where(h => h.IsValidTarget(1000)).OrderBy(h => h.Distance(Player)).FirstOrDefault();
+                    HeroManager.Enemies.Where(h => h.IsValidTarget(1000))
+                        .OrderBy(h => h.Distance(Player))
+                        .FirstOrDefault();
                 if (t != null && pet.CanAttack)
                     pet.IssueOrder(GameObjectOrder.AutoAttackPet, t);
             }
         }
         private static void OnPossibleToInterrupt(Obj_AI_Base unit, Interrupter2.InterruptableTargetEventArgs args)
         {
-            var dangerLvl =
-                (Interrupter2.DangerLevel)
-                    (Config.LeBlanc.Item("apollo.leblanc.anit.interrupter.dangerlvl")
-                        .GetValue<StringList>()
-                        .SelectedIndex + 2);
-
-            if (args.DangerLevel < dangerLvl || unit == null)
-                return;
-
-            var useE = Config.LeBlanc.Item("apollo.leblanc.anti.interrupter.e.bool").GetValue<bool>();
-            var useR = Config.LeBlanc.Item("apollo.leblanc.anti.interrupter.r.bool").GetValue<bool>();
-            var preE = (HitChance)(Config.LeBlanc.Item("apollo.leblanc.anti.interrupter.e.pre").GetValue<StringList>().SelectedIndex + 3);
-            var preR = (HitChance)(Config.LeBlanc.Item("apollo.leblanc.anti.interrupter.r.pre").GetValue<StringList>().SelectedIndex + 3);
-
-            if (useR && Spell[SpellSlot.R].Instance.Name == Helper.Spells.Name.R.E)
+            if (Spell[SpellSlot.E].IsInRange(unit))
             {
-                Spell[SpellSlot.R].CastIfHitchanceEquals(unit, preR);
-            }
-            else if (useE)
-            {
-                Spell[SpellSlot.E].CastIfHitchanceEquals(unit, preE);
+                if (Spell[SpellSlot.E].IsReadyAndActive(MenuHelper.Mode.Interrupter) &&
+                    args.DangerLevel >= Config.LeBlanc.GetInterrupterDangerLevel(Spell[SpellSlot.E]))
+                {
+                    Cast.E(unit, HitChance.High);
+                }
+                if (Spell[SpellSlot.R].IsReadyAndActive(MenuHelper.Mode.Interrupter) &&
+                    Spell[SpellSlot.R].HasStatus(SpellSlot.E) &&
+                    args.DangerLevel >= Config.LeBlanc.GetInterrupterDangerLevel(Spell[SpellSlot.R]))
+                {
+                    Cast.R.E(unit, HitChance.High);
+                }
             }
         }
         private static void AnitGapcloser(ActiveGapcloser gapcloser)
         {
-            var useE = Config.LeBlanc.Item("apollo.leblanc.anti.gapcloser.e.bool").GetValue<bool>();
-            var useR = Config.LeBlanc.Item("apollo.leblanc.anti.gapcloser.r.bool").GetValue<bool>();
-            var preE = (HitChance)(Config.LeBlanc.Item("apollo.leblanc.anti.gapcloser.e.pre").GetValue<StringList>().SelectedIndex + 3);
-            var preR = (HitChance)(Config.LeBlanc.Item("apollo.leblanc.anti.gapcloser.r.pre").GetValue<StringList>().SelectedIndex + 3);
-
-            if (useE)
+            if (Spell[SpellSlot.E].IsInRange(gapcloser.Sender))
             {
-                Spell[SpellSlot.E].CastIfHitchanceEquals(gapcloser.Sender, preE);
+                if (Spell[SpellSlot.E].IsReadyAndActive(MenuHelper.Mode.Antigapcloser))
+                {
+                    Cast.E(gapcloser.Sender, HitChance.High);
+                }
+                if (Spell[SpellSlot.R].IsReadyAndActive(MenuHelper.Mode.Antigapcloser) &&
+                    Spell[SpellSlot.R].HasStatus(SpellSlot.E))
+                {
+                    Cast.R.E(gapcloser.Sender, HitChance.High);
+                }
             }
-            if (useR && Spell[SpellSlot.R].Instance.Name == Helper.Spells.Name.R.E)
+        }
+        private static void AfterAttack(AttackableUnit unit, AttackableUnit target)
+        {
+            if (Config.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear ||
+                !Spell[SpellSlot.Q].IsReadyAndActive(MenuHelper.Mode.Laneclear) ||
+                Player.ManaPercent < Config.LeBlanc.GetSlider("laneclear.mana"))
             {
-                Spell[SpellSlot.R].CastIfHitchanceEquals(gapcloser.Sender, preR);
+                return;
+            }
+
+            var qMinion =
+                MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.Q].Range)
+                    .Where(
+                        h =>
+                            HealthPrediction.GetHealthPrediction(
+                                h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                                (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) <
+                            Player.GetSpellDamage(h, SpellSlot.Q) &&
+                            HealthPrediction.GetHealthPrediction(
+                                h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
+                                (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
+                    .OrderBy(h => h.Health)
+                    .FirstOrDefault();
+            if (qMinion != null)
+            {
+                Cast.Q(qMinion);
             }
         }
         private static Obj_AI_Hero GetTarget(float vDefaultRange = 0,

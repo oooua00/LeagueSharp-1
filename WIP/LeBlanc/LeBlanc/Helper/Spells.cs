@@ -1,28 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using LeagueSharp;
 using LeagueSharp.Common;
 
 namespace LeBlanc.Helper
 {
-    internal class Spells
+    internal static class Spells
     {
-        public class Name
-        {
-            public const string Q = "LeblancChaosOrb";
-            public const string W = "LeblancSlide";
-            public const string W2 = "LeblancSlideReturn";
-            public const string E = "LeblancSoulShackle";
-            public class R
-            {
-                public const string Q = "LeblancChaosOrbM";
-                public const string W = "LeblancSlideM";
-                public const string W2 = "LeblancSlideReturnM";
-                public const string E = "LeblancSoulShackleM";    
-            }
-        }
-
-
         public static readonly Dictionary<SpellSlot, Spell> Spell = new Dictionary<SpellSlot, Spell>
         {
             { SpellSlot.Q, new Spell(SpellSlot.Q, 700f) },
@@ -35,27 +18,48 @@ namespace LeBlanc.Helper
             Spell[SpellSlot.W].SetSkillshot(0.25f, 70, 1500, false, SkillshotType.SkillshotCircle);
             Spell[SpellSlot.E].SetSkillshot(0.25f, 70, 1600, true, SkillshotType.SkillshotLine);
 
-            var name = Spell[SpellSlot.R].Instance.Name;
-            switch (name)
+            if (Spell[SpellSlot.R].HasStatus(SpellSlot.Q))
             {
-                case Name.R.Q:
-                    {
-                        Spell[SpellSlot.R] = new Spell(SpellSlot.R, Spell[SpellSlot.Q].Range);
-                        break;
-                    }
-                case Name.R.W:
-                    {
-                        Spell[SpellSlot.R] = new Spell(SpellSlot.R, Spell[SpellSlot.W].Range);
-                        Spell[SpellSlot.R].SetSkillshot(Spell[SpellSlot.W].Delay, Spell[SpellSlot.W].Width, Spell[SpellSlot.W].Speed, false, SkillshotType.SkillshotCircle);
-                        break;
-                    }
-                case Name.R.E:
-                    {
-                        Spell[SpellSlot.R] = new Spell(SpellSlot.R, Spell[SpellSlot.E].Range);
-                        Spell[SpellSlot.R].SetSkillshot(Spell[SpellSlot.E].Delay, Spell[SpellSlot.E].Width, Spell[SpellSlot.E].Speed, true, SkillshotType.SkillshotLine);
-                        break;
-                    }
+                Spell[SpellSlot.R] = new Spell(SpellSlot.R, Spell[SpellSlot.Q].Range);
             }
+            if (Spell[SpellSlot.R].HasStatus(SpellSlot.W))
+            {
+                Spell[SpellSlot.R] = new Spell(SpellSlot.R, Spell[SpellSlot.W].Range);
+                Spell[SpellSlot.R].SetSkillshot(Spell[SpellSlot.W].Delay, Spell[SpellSlot.W].Width, Spell[SpellSlot.W].Speed, false, SkillshotType.SkillshotCircle);
+            }
+            if (Spell[SpellSlot.R].HasStatus(SpellSlot.E))
+            {
+                Spell[SpellSlot.R] = new Spell(SpellSlot.R, Spell[SpellSlot.E].Range);
+                Spell[SpellSlot.R].SetSkillshot(Spell[SpellSlot.E].Delay, Spell[SpellSlot.E].Width, Spell[SpellSlot.E].Speed, true, SkillshotType.SkillshotLine);
+            }
+        }
+
+        public static bool IsSecond(this Spell spell)
+        {
+            if (spell.Slot == SpellSlot.W)
+                return spell.Instance.Name == "LeblancSlideReturn";
+            if (spell.Slot == SpellSlot.R)
+                return spell.Instance.Name == "LeblancSlideReturnM";
+
+            return false;
+        }
+
+        public static bool HasStatus(this Spell spell, SpellSlot spellSlot)
+        {
+            if (spell.Slot == SpellSlot.R)
+            {
+                switch (spellSlot)
+                {
+                    case SpellSlot.Q:
+                        return spell.Instance.Name == "LeblancChaosOrbM";
+                    case SpellSlot.W:
+                        return spell.Instance.Name == "LeblancSlideM";
+                    case SpellSlot.E:
+                        return spell.Instance.Name == "LeblancSoulShackleM";
+                }
+            }
+
+            return false;
         }
     }
 }

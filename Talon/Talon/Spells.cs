@@ -17,7 +17,6 @@ namespace Talon
         };
         public static void Init()
         {
-            Spell[SpellSlot.Q].SetTargetted(0, 0);
             Spell[SpellSlot.W].SetSkillshot(0.25f, 75, 2300, false, SkillshotType.SkillshotLine);
             Spell[SpellSlot.E].SetTargetted(0, 0);
         }

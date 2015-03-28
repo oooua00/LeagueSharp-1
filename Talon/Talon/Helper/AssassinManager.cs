@@ -6,7 +6,7 @@ using LeagueSharp.Common;
 using SharpDX.Direct3D9;
 using Font = SharpDX.Direct3D9.Font;
 
-namespace Talon
+namespace Talon.Helper
 {
     internal class AssassinManager
     {
@@ -42,47 +42,47 @@ namespace Talon
 
                 });
 
-            Config.TalonConfig.AddSubMenu(new Menu("Set Priority Targets", "MenuAssassin"));
-            Config.TalonConfig.SubMenu("MenuAssassin").AddItem(new MenuItem("AssassinActive", "Active").SetValue(true));
-            Config.TalonConfig.SubMenu("MenuAssassin")
+            Config.Talon.AddSubMenu(new Menu("Set Priority Targets", "MenuAssassin"));
+            Config.Talon.SubMenu("MenuAssassin").AddItem(new MenuItem("AssassinActive", "Active").SetValue(true));
+            Config.Talon.SubMenu("MenuAssassin")
                 .AddItem(new MenuItem("AssassinSearchRange", "    Search Range"))
                 .SetValue(new Slider(1400, 2000));
             
-            Config.TalonConfig.SubMenu("MenuAssassin")
+            Config.Talon.SubMenu("MenuAssassin")
                 .AddItem(
                     new MenuItem("AssassinSelectOption", "    Set:").SetValue(
                         new StringList(new[] { "Single Select", "Multi Select" })));
 
-            Config.TalonConfig.SubMenu("MenuAssassin").AddItem(new MenuItem("xM1", "Enemies:"));
+            Config.Talon.SubMenu("MenuAssassin").AddItem(new MenuItem("xM1", "Enemies:"));
             foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != ObjectManager.Player.Team))
             {
-                Config.TalonConfig.SubMenu("MenuAssassin")
+                Config.Talon.SubMenu("MenuAssassin")
 
                     .AddItem(
                         new MenuItem("Assassin" + enemy.ChampionName, "    " + enemy.ChampionName).SetValue(
                             TargetSelector.GetPriority(enemy) > 3));
             }
-            Config.TalonConfig.SubMenu("MenuAssassin").AddItem(new MenuItem("xM2", "Other Settings:"));
+            Config.Talon.SubMenu("MenuAssassin").AddItem(new MenuItem("xM2", "Other Settings:"));
             
-            Config.TalonConfig.SubMenu("MenuAssassin")
+            Config.Talon.SubMenu("MenuAssassin")
                 .AddItem(new MenuItem("AssassinSetClick", "    Add/Remove with click").SetValue(true));
-            Config.TalonConfig.SubMenu("MenuAssassin")
+            Config.Talon.SubMenu("MenuAssassin")
                 .AddItem(
                     new MenuItem("AssassinReset", "    Reset List").SetValue(new KeyBind("T".ToCharArray()[0],
                         KeyBindType.Press)));
 
-            Config.TalonConfig.SubMenu("MenuAssassin").AddSubMenu(new Menu("Drawings", "Draw"));
+            Config.Talon.SubMenu("MenuAssassin").AddSubMenu(new Menu("Drawings", "Draw"));
 
-            Config.TalonConfig.SubMenu("MenuAssassin")
+            Config.Talon.SubMenu("MenuAssassin")
                 .SubMenu("Draw")
                 .AddItem(new MenuItem("DrawSearch", "Search Range").SetValue(new Circle(true, Color.GreenYellow)));
-            Config.TalonConfig.SubMenu("MenuAssassin")
+            Config.Talon.SubMenu("MenuAssassin")
                 .SubMenu("Draw")
                 .AddItem(new MenuItem("DrawActive", "Active Enemy").SetValue(new Circle(true, Color.GreenYellow)));
-            Config.TalonConfig.SubMenu("MenuAssassin")
+            Config.Talon.SubMenu("MenuAssassin")
                 .SubMenu("Draw")
                 .AddItem(new MenuItem("DrawNearest", "Nearest Enemy").SetValue(new Circle(true, Color.DarkSeaGreen)));
-            Config.TalonConfig.SubMenu("MenuAssassin")
+            Config.Talon.SubMenu("MenuAssassin")
                 .SubMenu("Draw")
                 .AddItem(new MenuItem("DrawStatus", "Show status on the screen").SetValue(true));
 
@@ -96,7 +96,7 @@ namespace Talon
             foreach (
                 var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != ObjectManager.Player.Team))
             {
-                Config.TalonConfig.Item("Assassin" + enemy.ChampionName).SetValue(false);
+                Config.Talon.Item("Assassin" + enemy.ChampionName).SetValue(false);
             }
         }
         private static void OnGameUpdate(EventArgs args)
@@ -116,7 +116,7 @@ namespace Talon
         private static void Game_OnWndProc(WndEventArgs args)
         {
 
-            if (Config.TalonConfig.Item("AssassinReset").GetValue<KeyBind>().Active && args.Msg == 257)
+            if (Config.Talon.Item("AssassinReset").GetValue<KeyBind>().Active && args.Msg == 257)
             {
                 ClearAssassinList();
                 Game.PrintChat(
@@ -128,7 +128,7 @@ namespace Talon
                 return;
             }
 
-            if (Config.TalonConfig.Item("AssassinSetClick").GetValue<bool>())
+            if (Config.Talon.Item("AssassinSetClick").GetValue<bool>())
             {
                 foreach (var objAiHero in from hero in ObjectManager.Get<Obj_AI_Hero>()
                                           where hero.IsValidTarget()
@@ -143,13 +143,13 @@ namespace Talon
                     if (objAiHero != null && objAiHero.IsVisible && !objAiHero.IsDead)
                     {
                         var xSelect =
-                            Config.TalonConfig.Item("AssassinSelectOption").GetValue<StringList>().SelectedIndex;
+                            Config.Talon.Item("AssassinSelectOption").GetValue<StringList>().SelectedIndex;
 
                         switch (xSelect)
                         {
                             case 0:
                                 ClearAssassinList();
-                                Config.TalonConfig.Item("Assassin" + objAiHero.ChampionName).SetValue(true);
+                                Config.Talon.Item("Assassin" + objAiHero.ChampionName).SetValue(true);
                                 Game.PrintChat(
                                     string.Format(
                                         "<font color='FFFFFF'>Added to Assassin List</font> <font color='#09F000'>{0} ({1})</font>",
@@ -157,9 +157,9 @@ namespace Talon
                                 break;
                             case 1:
                                 var menuStatus =
-                                    Config.TalonConfig.Item("Assassin" + objAiHero.ChampionName)
+                                    Config.Talon.Item("Assassin" + objAiHero.ChampionName)
                                         .GetValue<bool>();
-                                Config.TalonConfig.Item("Assassin" + objAiHero.ChampionName)
+                                Config.Talon.Item("Assassin" + objAiHero.ChampionName)
                                     .SetValue(!menuStatus);
                                 Game.PrintChat(
                                     string.Format("<font color='{0}'>{1}</font> <font color='#09F000'>{2} ({3})</font>",
@@ -174,16 +174,16 @@ namespace Talon
         }
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (!Config.TalonConfig.Item("AssassinActive").GetValue<bool>())
+            if (!Config.Talon.Item("AssassinActive").GetValue<bool>())
                 return;
 
-            if (Config.TalonConfig.Item("DrawStatus").GetValue<bool>())
+            if (Config.Talon.Item("DrawStatus").GetValue<bool>())
             {
                 var enemies = ObjectManager.Get<Obj_AI_Hero>().Where(xEnemy => xEnemy.IsEnemy);
                 var objAiHeroes = enemies as Obj_AI_Hero[] ?? enemies.ToArray();
 
                 DrawText(TextBold, "Target Mode:", (int)Drawing.Width * 0.89f, (int)Drawing.Height * 0.55f, SharpDX.Color.White); 
-                var xSelect = Config.TalonConfig.Item("AssassinSelectOption").GetValue<StringList>().SelectedIndex;
+                var xSelect = Config.Talon.Item("AssassinSelectOption").GetValue<StringList>().SelectedIndex;
                 DrawText(
                     Text, xSelect == 0 ? "Single Target" : "Multi Targets", (int) Drawing.Width * 0.94f,
                     Drawing.Height * 0.55f, SharpDX.Color.White);
@@ -193,7 +193,7 @@ namespace Talon
 
                 for (int i = 0; i < objAiHeroes.Count(); i++)
                 {
-                    var xValue = Config.TalonConfig.Item("Assassin" + objAiHeroes[i].ChampionName).GetValue<bool>();
+                    var xValue = Config.Talon.Item("Assassin" + objAiHeroes[i].ChampionName).GetValue<bool>();
                     DrawTextBold(
                         xValue ? TextBold : Text, objAiHeroes[i].ChampionName, Drawing.Width * 0.895f,
                         Drawing.Height * 0.58f + (float) (i + 1) * 15,
@@ -201,11 +201,11 @@ namespace Talon
                 }
             }
 
-            var drawSearch = Config.TalonConfig.Item("DrawSearch").GetValue<Circle>();
-            var drawActive = Config.TalonConfig.Item("DrawActive").GetValue<Circle>();
-            var drawNearest = Config.TalonConfig.Item("DrawNearest").GetValue<Circle>();
+            var drawSearch = Config.Talon.Item("DrawSearch").GetValue<Circle>();
+            var drawActive = Config.Talon.Item("DrawActive").GetValue<Circle>();
+            var drawNearest = Config.Talon.Item("DrawNearest").GetValue<Circle>();
 
-            var drawSearchRange = Config.TalonConfig.Item("AssassinSearchRange").GetValue<Slider>().Value;
+            var drawSearchRange = Config.Talon.Item("AssassinSearchRange").GetValue<Slider>().Value;
             if (drawSearch.Active)
             {
                 Render.Circle.DrawCircle(ObjectManager.Player.Position, drawSearchRange, drawSearch.Color, 1);
@@ -218,10 +218,10 @@ namespace Talon
                         .Where(
                             enemy =>
                                 enemy.IsVisible &&
-                                Config.TalonConfig.Item("Assassin" + enemy.ChampionName) != null &&
+                                Config.Talon.Item("Assassin" + enemy.ChampionName) != null &&
                                 !enemy.IsDead)
                         .Where(
-                            enemy => Config.TalonConfig.Item("Assassin" + enemy.ChampionName).GetValue<bool>()))
+                            enemy => Config.Talon.Item("Assassin" + enemy.ChampionName).GetValue<bool>()))
             {
                 if (ObjectManager.Player.Distance(enemy) < drawSearchRange)
                 {

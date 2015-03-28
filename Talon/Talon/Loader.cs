@@ -14,13 +14,13 @@ namespace Talon
                     if (ObjectManager.Player.ChampionName != "Talon")
                         return;
 
-                    Config.Init();
+                    Helper.Updater.Init("Apollo16/LeagueSharp/master/Talon/Talon");
                     Spells.Init();
-                    Drawings.Init();
-                    AssassinManager.Init();
-                    UpdateChecker.Initialize("Apollo16/LeagueSharp/tree/master/Talon");
+                    Config.Init();
+                    Helper.AssassinManager.Init();
                     Mechanics.Init();
-                    Notifications.AddNotification("Apollo's " + ObjectManager.Player.ChampionName + " Loaded", 5000);
+                    Config.ShowNotification(
+                        "Apollo's " + ObjectManager.Player.ChampionName + " Loaded", Config.NotificationColor, 7000);
                 };
             }
         }

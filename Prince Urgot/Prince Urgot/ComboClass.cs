@@ -18,7 +18,7 @@ namespace Prince_Urgot
         {
             ComboMenu = comboMenu;
             Menu();
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
             Interrupter2.OnInterruptableTarget += Interrupter_OnPossibleToInterrupt;
         }
 

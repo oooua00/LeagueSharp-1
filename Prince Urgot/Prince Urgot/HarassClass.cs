@@ -16,7 +16,7 @@ namespace Prince_Urgot
         {
             HarassMenu = harassMenu;
             Menu();
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
         }
 
         private static void Menu()

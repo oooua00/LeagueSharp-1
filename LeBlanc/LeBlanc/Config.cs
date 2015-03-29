@@ -42,7 +42,7 @@ namespace LeBlanc
             Configs.Drawing = new Menu("Drawings", "apollo.leblanc.draw");
 
             //Combo
-            Configs.Combo = new Menu("Combo", "apollo.marksman.combo");
+            Configs.Combo = new Menu("Combo", "apollo.leblanc.combo");
             {
                 var q = new Menu("Q", "apollo.leblanc.combo.q");
                 q.AddBool("combo.q.bool", "Use in Combo");
@@ -63,6 +63,7 @@ namespace LeBlanc
                     r.AddBool("combo.r.bool", "Use in Combo");
 
                     var rw = new Menu("W", "apollo.leblanc.combo.r.w");
+                    rw.AddBool("combo.r.w.second", "Use Second R(W)");
                     rw.AddHitChance("combo.r.w.pre");
                     r.AddSubMenu(rw);
 
@@ -94,7 +95,7 @@ namespace LeBlanc
                 Configs.Harass.AddSubMenu(e);
 
                 Configs.Harass.AddSlider("harass.mana", "Minimum Mana%", 30);
-                Configs.Harass.AddKeyBind("harass.key", "ToggleKey", "T", KeyBindType.Toggle);
+                Configs.Harass.AddKeyBind("harass.key", "ToggleKey", "H", KeyBindType.Toggle);
             }
 
             //Laneclear
@@ -123,8 +124,8 @@ namespace LeBlanc
             //AnitGapcloser
             Configs.AntiGapcloser = new Menu("AntiGapcloser", "apollo.leblanc.antigap");
             {
-                Configs.AntiGapcloser.AddBool("antigap.e.bool", "Use E");
-                Configs.AntiGapcloser.AddBool("antigap.r.bool", "Use R(E)");
+                Configs.AntiGapcloser.AddBool("antigapcloser.e.bool", "Use E");
+                Configs.AntiGapcloser.AddBool("antigapcloser.r.bool", "Use R(E)");
             }
             //Flee
             Configs.Flee = new Menu("Flee", "apollo.leblanc.flee");
@@ -163,6 +164,7 @@ namespace LeBlanc
                 LeBlanc.AddBool("packetcast", "PacketCast (Doesnt work)", false);
             }
 
+            AssassinManager.Init();
             LeBlanc.AddSubMenu(Configs.Combo);
             LeBlanc.AddSubMenu(Configs.Harass);
             LeBlanc.AddSubMenu(Configs.LaneClear);

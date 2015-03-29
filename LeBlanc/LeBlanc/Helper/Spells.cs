@@ -37,9 +37,9 @@ namespace LeBlanc.Helper
         public static bool IsSecond(this Spell spell)
         {
             if (spell.Slot == SpellSlot.W)
-                return spell.Instance.Name == "LeblancSlideReturn";
+                return spell.Instance.Name == "leblancslidereturn";
             if (spell.Slot == SpellSlot.R)
-                return spell.Instance.Name == "LeblancSlideReturnM";
+                return spell.Instance.Name == "leblancslidereturnm";
 
             return false;
         }

@@ -19,7 +19,6 @@ namespace LeBlanc
             Game.OnUpdate += OnUpdate;
             AntiGapcloser.OnEnemyGapcloser += AnitGapcloser;
             Interrupter2.OnInterruptableTarget += OnPossibleToInterrupt;
-            Orbwalking.AfterAttack += AfterAttack;
         }
         private static void OnUpdate(EventArgs args)
         {
@@ -129,7 +128,7 @@ namespace LeBlanc
             {
                 Cast.E(t, Spell[SpellSlot.E].GetHitChance(MenuHelper.Mode.Combo));
             }
-            if (Spell[SpellSlot.R].IsSecond())
+            if (Spell[SpellSlot.R].IsSecond() && Config.LeBlanc.GetBool("combo.r.w.second"))
             {
                 Cast.R.W2();
             }
@@ -147,11 +146,23 @@ namespace LeBlanc
             if (minions == null || !mana)
                 return;
 
+            if (Spell[SpellSlot.Q].IsReadyAndActive(MenuHelper.Mode.Laneclear))
+            {
+                var minionQ =
+                    minions.Where(
+                        h =>
+                            h.Distance(Player) > Orbwalking.GetRealAutoAttackRange(h) &&
+                            h.Health < Player.GetSpellDamage(h, SpellSlot.Q)).OrderBy(h => h.Health).FirstOrDefault();
+
+                if (minionQ != null)
+                    Spell[SpellSlot.Q].CastOnUnit(minionQ, PacketCast);
+            }
+
             if (Spell[SpellSlot.W].IsReadyAndActive(MenuHelper.Mode.Laneclear) && !Spell[SpellSlot.W].IsSecond())
             {
                 var farmLoc =
                     MinionManager.GetBestCircularFarmLocation(
-                        minions.Select(m => m.ServerPosition.To2D()).ToList(), Spell[SpellSlot.W].Width,
+                        minions.Select(m => m.ServerPosition.To2D()).ToList(), 100,
                         Spell[SpellSlot.W].Range);
 
                 if (farmLoc.MinionsHit >= Config.LeBlanc.GetSlider("laneclear.w.hit"))
@@ -339,33 +350,6 @@ namespace LeBlanc
                 {
                     Cast.R.E(gapcloser.Sender, HitChance.High);
                 }
-            }
-        }
-        private static void AfterAttack(AttackableUnit unit, AttackableUnit target)
-        {
-            if (Config.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear ||
-                !Spell[SpellSlot.Q].IsReadyAndActive(MenuHelper.Mode.Laneclear) ||
-                Player.ManaPercent < Config.LeBlanc.GetSlider("laneclear.mana"))
-            {
-                return;
-            }
-
-            var qMinion =
-                MinionManager.GetMinions(Player.ServerPosition, Spell[SpellSlot.Q].Range)
-                    .Where(
-                        h =>
-                            HealthPrediction.GetHealthPrediction(
-                                h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
-                                (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) <
-                            Player.GetSpellDamage(h, SpellSlot.Q) &&
-                            HealthPrediction.GetHealthPrediction(
-                                h, (int) (Player.Distance(h) / Spell[SpellSlot.Q].Speed),
-                                (int) (Spell[SpellSlot.Q].Delay * 1000 + Game.Ping / 2f)) > 0)
-                    .OrderBy(h => h.Health)
-                    .FirstOrDefault();
-            if (qMinion != null)
-            {
-                Cast.Q(qMinion);
             }
         }
         private static Obj_AI_Hero GetTarget(float vDefaultRange = 0,

@@ -205,8 +205,10 @@ namespace Viktor
             {
                 return;
             }
-
-            Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
+            if (Orbwalking.InAutoAttackRange(t))
+                Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
+            else if (!Config.ViktorConfig.Item("apollo.viktor.combo.q.aa").GetValue<bool>())
+                Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
         }
 
         private static void CastW()

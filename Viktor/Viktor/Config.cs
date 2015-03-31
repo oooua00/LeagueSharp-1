@@ -52,6 +52,7 @@ namespace Viktor
                 r.AddItem(
                     new MenuItem("apollo.viktor.combo.r.minhp", "Dont ult if target has hp%").SetValue(new Slider(5)));
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.hit", "Use if min hit").SetValue(new Slider(3, 1, 5)));
+                r.AddItem(new MenuItem("apollo.viktor.combo.r.autofollow", "Auto Follow").SetValue(true));
 
                 combo.AddSubMenu(r);
 

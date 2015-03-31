@@ -1,41 +1,52 @@
-﻿using LeagueSharp.Common;
-using System;
+﻿using System;
+using System.IO;
+using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Viktor
 {
     internal class Updater
     {
-        private static readonly System.Version Version = Assembly.GetExecutingAssembly().GetName().Version;
-        public static void Init(string path)
+        private static readonly Version Version = Assembly.GetExecutingAssembly().GetName().Version;
+        public static void Init(string user, string assembly)
         {
             try
             {
-                var data = new BetterWebClient(null).DownloadString("https://raw.github.com/" + path + "/Properties/AssemblyInfo.cs");
-                foreach (var line in data.Split('\n'))
+                var request =
+                    WebRequest.Create(
+                        String.Format(
+                            "https://raw.githubusercontent.com/{0}/LeagueSharp/master/{1}/{1}/Properties/AssemblyInfo.cs",
+                            user, assembly));
+                var response = request.GetResponse();
+                var data = response.GetResponseStream();
+                string version;
+                using (var sr = new StreamReader(data))
                 {
-                    if (line.StartsWith("//"))
-                    {
-                        continue;
-                    }
+                    version = sr.ReadToEnd();
+                }
+                const string pattern = @"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}";
+                var serverVersion = new Version(new Regex(pattern).Match(version).Groups[0].Value);
 
-                    if (line.StartsWith("[assembly: AssemblyVersion"))
-                    {
-                        var serverVersion = new System.Version(line.Substring(28, (line.Length - 4) - 28 + 1));
-                        if (serverVersion > Version)
-                        {
-                            Config.ShowNotification(
-                                "Update avalible: " + Version + " => " + serverVersion, System.Drawing.Color.Red, 10000);
-                        }
-                    }
+                if (serverVersion > Version)
+                {
+                    Config.ShowNotification(
+                        "Update avalible: " + Version + " => " + serverVersion, System.Drawing.Color.Red, 10000);
+                }
+                else if (serverVersion == Version)
+                {
+                    Config.ShowNotification("No Update avalible: " + Version, System.Drawing.Color.GreenYellow, 5000);
+                }
+                else if (serverVersion < Version)
+                {
+                    Config.ShowNotification(
+                        "Beta Version: " + Version + " => " + serverVersion, System.Drawing.Color.Yellow, 10000);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
-
-            Config.ShowNotification("No Update avalible: "+Version, System.Drawing.Color.GreenYellow, 5000);
         }
     }
 }

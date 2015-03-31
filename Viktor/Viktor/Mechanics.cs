@@ -138,11 +138,9 @@ namespace Viktor
                 {
                     var farmLocation =
                         MinionManager.GetBestLineFarmLocation(
-                            MinionManager.GetMinionsPredictedPositions(
-                                MinionManager.GetMinions(minion.Position, Spell[SpellSlot.E].Range),
-                                Spell[SpellSlot.E].Delay, Spell[SpellSlot.E].Width, Spell[SpellSlot.E].Speed,
-                                minion.Position, Spell[SpellSlot.E].Range, false, SkillshotType.SkillshotLine),
-                            Spell[SpellSlot.E].Width, Spell[SpellSlot.E].Range);
+                            MinionManager.GetMinions(minion.Position, Spell[SpellSlot.E].Range)
+                                .Select(m => m.ServerPosition.To2D())
+                                .ToList(), Spell[SpellSlot.E].Width, Spell[SpellSlot.E].Range);
 
                     if (farmLocation.MinionsHit >= minhitE)
                     {
@@ -311,7 +309,6 @@ namespace Viktor
                 return;
             }
 
-
             var preR = Spell[SpellSlot.R].GetPrediction(t, true);
             if (t.IsValidTarget(Spell[SpellSlot.R].Range) &&
                 Config.ViktorConfig.Item("apollo.viktor.combo.r.kill").GetValue<bool>() &&
@@ -320,7 +317,7 @@ namespace Viktor
             {
                 Spell[SpellSlot.R].Cast(t, PacketCast, true);
             }
-            else if (preR.AoeTargetsHitCount >=
+            else if (preR.CastPosition.CountEnemiesInRange(Spell[SpellSlot.R].Width) >=
                      Config.ViktorConfig.Item("apollo.viktor.combo.r.hit").GetValue<Slider>().Value)
             {
                 Spell[SpellSlot.R].Cast(preR.CastPosition, PacketCast);
@@ -329,12 +326,12 @@ namespace Viktor
 
         private static void AutoFollowR()
         {
-            if (ChaosStorm != null)
+            if (ChaosStorm != null && Config.ViktorConfig.Item("apollo.viktor.combo.r.autofollow").GetValue<bool>())
             {
                 var stormT = TargetSelector.GetTarget(
                     Player, 1600, TargetSelector.DamageType.Magical, true, null, ChaosStorm.Position);
                 if (stormT != null)
-                    Utility.DelayAction.Add(2000, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
+                    Utility.DelayAction.Add(500, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
             }
         }
 

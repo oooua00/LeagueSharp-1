@@ -76,6 +76,12 @@ namespace LeBlanc
                     dmg += 2 * R.E(enemy);
             }
 
+            if (Mechanics.IgniteSlot != SpellSlot.Unknown &&
+                Player.Spellbook.CanUseSpell(Mechanics.IgniteSlot) == SpellState.Ready)
+            {
+                dmg += ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
+            }
+
             return (float)dmg;
         }
     }

@@ -14,7 +14,7 @@ namespace Talon
                     if (ObjectManager.Player.ChampionName != "Talon")
                         return;
 
-                    Helper.Updater.Init("Apollo16/LeagueSharp/master/Talon/Talon");
+                    //Helper.Updater.Init("Apollo16/LeagueSharp/master/Talon/Talon");
                     Spells.Init();
                     Config.Init();
                     Helper.AssassinManager.Init();

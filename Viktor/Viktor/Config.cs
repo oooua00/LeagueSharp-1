@@ -54,7 +54,9 @@ namespace Viktor
                     new MenuItem("apollo.viktor.combo.r.minhp", "Dont ult if target has hp%").SetValue(new Slider(5)));
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.hit", "Use if min hit").SetValue(new Slider(3, 1, 5)));
                 r.AddItem(new MenuItem("apollo.viktor.combo.r.autofollow", "Auto Follow").SetValue(true));
-
+                r.AddItem(
+                    new MenuItem("apollo.viktor.combo.r.delay", "Auto Follow click delay").SetValue(new Slider(200, 1,
+                        1000)));
                 combo.AddSubMenu(r);
 
                 combo.AddItem(new MenuItem("apollo.viktor.combo.ignite.bool", "Use Ignite").SetValue(true));
@@ -97,8 +99,6 @@ namespace Viktor
                 e.AddItem(new MenuItem("apollo.viktor.laneclear.e.bool", "Use in Laneclear").SetValue(true));
                 e.AddItem(
                     new MenuItem("apollo.viktor.laneclear.e.hit", "Use if min hit").SetValue(new Slider(3, 1, 10)));
-                e.AddItem(
-                    new MenuItem("apollo.viktor.laneclear.e.ToasterProofE", "Use toaster proof e").SetValue(true));
                 laneclear.AddSubMenu(e);
 
                 laneclear.AddItem(new MenuItem("apollo.viktor.laneclear.mana", "Min Mana%").SetValue(new Slider(30)));

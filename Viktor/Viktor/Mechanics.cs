@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 
 namespace Viktor
 {
@@ -22,6 +24,7 @@ namespace Viktor
             Interrupter2.OnInterruptableTarget += OnInterruptableTarget;
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
             Orbwalking.AfterAttack += AfterAttack;
+            Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
         }
 
         private static void OnUpdate(EventArgs args)
@@ -134,20 +137,34 @@ namespace Viktor
 
             if (useE && Spell[SpellSlot.E].IsReady())
             {
-                foreach (var minion in MinionManager.GetMinions(Player.Position, Spells.ECastRange))
+                var dic = new Dictionary<MinionManager.FarmLocation, Obj_AI_Base>();
+                var list = new List<MinionManager.FarmLocation>();
+                foreach (var minion in MinionManager.GetMinions(Player.ServerPosition, Spells.ECastRange))
                 {
                     var farmLocation =
                         MinionManager.GetBestLineFarmLocation(
-                            MinionManager.GetMinions(minion.Position, Spell[SpellSlot.E].Range)
-                                .Select(m => m.ServerPosition.To2D())
-                                .ToList(), Spell[SpellSlot.E].Width, Spell[SpellSlot.E].Range);
+                            MinionManager.GetMinionsPredictedPositions(
+                                MinionManager.GetMinions(minion.ServerPosition, Spell[SpellSlot.E].Range),
+                                Spell[SpellSlot.E].Delay, Spell[SpellSlot.E].Width, Spell[SpellSlot.E].Speed,
+                                minion.ServerPosition, Spell[SpellSlot.E].Range, false, SkillshotType.SkillshotLine),
+                            Spell[SpellSlot.E].Width, Spell[SpellSlot.E].Range);
 
                     if (farmLocation.MinionsHit >= minhitE)
                     {
-                        Spell[SpellSlot.E].Cast(minion.Position.To2D(), farmLocation.Position);
+                        dic.Add(farmLocation, minion);
+                        list.Add(farmLocation);
                     }
                 }
-                
+
+                if (list.Any())
+                {
+                    var farmloc = list.OrderBy(h => h.MinionsHit).FirstOrDefault();
+                    var minion = dic[farmloc];
+                    Spell[SpellSlot.E].Cast(minion.ServerPosition, farmloc.Position.To3D());
+                }
+
+                dic.Clear();
+                list.Clear();
             }
         }
 
@@ -156,7 +173,7 @@ namespace Viktor
             var minions = MinionManager.GetMinions(
                 Player.ServerPosition, Spell[SpellSlot.E].Range + Spells.ECastRange, MinionTypes.All, MinionTeam.Neutral,
                 MinionOrderTypes.MaxHealth);
-            var mana = Player.ManaPercentage() > Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
+            var mana = Player.ManaPercent > Config.ViktorConfig.Item("apollo.viktor.laneclear.mana").GetValue<Slider>().Value;
 
             if (minions == null || !mana)
                 return;
@@ -205,7 +222,7 @@ namespace Viktor
             {
                 return;
             }
-            if (Orbwalking.InAutoAttackRange(t))
+            if (Player.Distance(t) < Player.AttackRange)
                 Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
             else if (!Config.ViktorConfig.Item("apollo.viktor.combo.q.aa").GetValue<bool>())
                 Spell[SpellSlot.Q].CastOnUnit(t, PacketCast);
@@ -251,26 +268,26 @@ namespace Viktor
                     Spell[SpellSlot.W].CastIfHitchanceEquals(enemy, HitChance.Immobile, true);
             }
 
-            var ta = TargetSelector.GetTarget(Spell[SpellSlot.W].Range, TargetSelector.DamageType.Magical);
-            if (ta != null)
+            var t = TargetSelector.GetTarget(Spell[SpellSlot.W].Range, TargetSelector.DamageType.Magical);
+            if (t != null)
             {
                 if (Config.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo &&
-                    ta.IsValidTarget(500) && ta.Path.Count() < 2)
+                    t.IsValidTarget(500) && t.Path.Count() < 2)
                 {
-                    if (ta.HasBuffOfType(BuffType.Slow))
-                        Spell[SpellSlot.W].CastIfHitchanceEquals(ta, HitChance.VeryHigh, true);
-                    else if (ta.Path.Count() < 2 && ta.CountEnemiesInRange(250) > 2)
-                        Spell[SpellSlot.W].CastIfHitchanceEquals(ta, HitChance.VeryHigh, true);
+                    if (t.HasBuffOfType(BuffType.Slow))
+                        Spell[SpellSlot.W].CastIfHitchanceEquals(t, HitChance.VeryHigh, true);
+                    else if (t.CountEnemiesInRange(250) > 2)
+                        Spell[SpellSlot.W].CastIfHitchanceEquals(t, HitChance.VeryHigh, true);
                 }
 
-                var waypoints = ta.GetWaypoints();
-                if (ta.Path.Count() < 2 &&
-                    (ta.ServerPosition.Distance(waypoints.Last().To3D()) > 500 ||
+                var waypoints = t.GetWaypoints();
+                if (t.Path.Count() < 2 &&
+                    (t.ServerPosition.Distance(waypoints.Last().To3D()) > 500 ||
                      Math.Abs(
                          (ObjectManager.Player.Distance(waypoints.Last().To3D()) -
-                          ObjectManager.Player.Distance(ta.Position))) > 400 || ta.Path.Count() == 0))
+                          ObjectManager.Player.Distance(t.Position))) > 400 || t.Path.Count() == 0))
                 {
-                    Spell[SpellSlot.W].CastIfHitchanceEquals(ta, HitChance.VeryHigh, true);
+                    Spell[SpellSlot.W].CastIfHitchanceEquals(t, HitChance.VeryHigh, true);
                 }
             }
         }
@@ -333,7 +350,9 @@ namespace Viktor
                 var stormT = TargetSelector.GetTarget(
                     Player, 1600, TargetSelector.DamageType.Magical, true, null, ChaosStorm.Position);
                 if (stormT != null)
-                    Utility.DelayAction.Add(500, () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
+                    Utility.DelayAction.Add(
+                        Config.ViktorConfig.Item("apollo.viktor.combo.r.delay").GetValue<Slider>().Value,
+                        () => Spell[SpellSlot.R].Cast(stormT.ServerPosition));
             }
         }
 
@@ -470,6 +489,13 @@ namespace Viktor
             if (lastHitCanonQ && canonLasthit != null)
             {
                 Spell[SpellSlot.Q].CastOnUnit(canonLasthit, PacketCast);
+            }
+        }
+        public static void OnProcessSpellCast(Obj_AI_Base unit, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (args.SData.Name == Spell[SpellSlot.Q].Instance.SData.Name && Config.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            {
+                Player.IssueOrder(GameObjectOrder.AttackUnit, args.Target);
             }
         }
     }
